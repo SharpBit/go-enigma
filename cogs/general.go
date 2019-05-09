@@ -1,4 +1,4 @@
-package commands
+package cogs
 
 func ping(ctx *Context) {
 	ctx.Send("Pong!")

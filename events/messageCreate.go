@@ -3,7 +3,7 @@ package events
 import (
 	"strings"
 
-	"../commands"
+	commands "../cogs"
 
 	discord "github.com/bwmarrin/discordgo"
 )

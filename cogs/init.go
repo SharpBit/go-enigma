@@ -1,4 +1,4 @@
-package commands
+package cogs
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	discord "github.com/bwmarrin/discordgo"
 )
 
-// Context command context
+// Context : command context
 type Context struct {
 	Session *discord.Session
 	Message *discord.MessageCreate
@@ -15,6 +15,17 @@ type Context struct {
 	Author  *discord.User
 	Args    []string
 	Prefix  string
+}
+
+// Send a message to the channel
+func (ctx *Context) Send(content string) (*discord.Message, error) {
+	return ctx.Session.ChannelMessageSend(ctx.Channel.ID, content)
+}
+
+// SendComplex an embed/complex message to the channel
+func (ctx *Context) SendComplex(content string, embed *discord.MessageEmbed) (*discord.Message, error) {
+	data := &discord.MessageSend{Content: content, Embed: embed}
+	return ctx.Session.ChannelMessageSendComplex(ctx.Channel.ID, data)
 }
 
 /*
@@ -34,17 +45,6 @@ type Command struct {
 	Aliases     []string
 	Dev         bool
 	Run         func(*Context)
-}
-
-// Send a message to the channel
-func (ctx *Context) Send(content string) (*discord.Message, error) {
-	return ctx.Session.ChannelMessageSend(ctx.Channel.ID, content)
-}
-
-// SendComplex an embed/complex message to the channel
-func (ctx *Context) SendComplex(content string, embed *discord.MessageEmbed) (*discord.Message, error) {
-	data := &discord.MessageSend{Content: content, Embed: embed}
-	return ctx.Session.ChannelMessageSendComplex(ctx.Channel.ID, data)
 }
 
 // NewCommand creates a new command
