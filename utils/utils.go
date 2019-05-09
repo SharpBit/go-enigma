@@ -19,17 +19,15 @@ func CreationTime(ID string) (t time.Time, err error) {
 }
 
 // GetRoles finds the roles based on given roles and IDs
-func GetRoles(roles []*discord.Role, ids []string) []*discord.Role {
-	filter := make([]*discord.Role, len(ids))
-
-	for _, r := range roles {
-		for i, id := range ids {
-			if id == r.ID {
-				filter[i] = r
+func GetRoles(guild *discord.Guild, member *discord.Member) []*discord.Role {
+	roles := []*discord.Role{}
+	for _, m := range member.Roles {
+		for _, r := range guild.Roles {
+			if r.ID == m {
+				roles = append(roles, r)
 				break
 			}
 		}
 	}
-
-	return filter
+	return roles
 }

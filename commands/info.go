@@ -137,15 +137,14 @@ func userinfo(ctx *Context) {
 		return
 	}
 
-	roles := utils.GetRoles(guild.Roles, member.Roles)
-	RoleNames := make([]string, len(roles))
+	roles := utils.GetRoles(guild, member)
+	sort.Slice(roles, func(i, j int) bool {
+		return roles[i].Position > roles[j].Position
+	})
+	RoleNames := []string{}
 	for _, r := range roles {
 		RoleNames = append(RoleNames, r.Name)
 	}
-
-	sort.Slice(roles, func(i, j int) bool {
-		return roles[i].Position < roles[j].Position
-	})
 
 	RolesFmt := strings.Join(RoleNames, ", ")
 	JoinedAt, err := member.JoinedAt.Parse()

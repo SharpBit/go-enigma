@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 
-	"github.com/bwmarrin/discordgo"
 	discord "github.com/bwmarrin/discordgo"
 )
 
@@ -38,7 +37,7 @@ type Command struct {
 }
 
 // Send a message to the channel
-func (ctx *Context) Send(content string) (*discordgo.Message, error) {
+func (ctx *Context) Send(content string) (*discord.Message, error) {
 	return ctx.Session.ChannelMessageSend(ctx.Channel.ID, content)
 }
 
