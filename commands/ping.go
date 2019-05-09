@@ -1,10 +1,18 @@
 package commands
 
-import (
-	discord "github.com/bwmarrin/discordgo"
-)
+import "fmt"
 
-// Ping command
-func Ping(session *discord.Session, msg *discord.Message) {
-	session.ChannelMessageSend(msg.ChannelID, "Pong!")
+func ping(ctx *Context) {
+	ctx.Send("Pong!")
+}
+
+func init() {
+	cmd, existing := NewCommand("ping", "Pong!")
+	if existing {
+		fmt.Println("error: command ping already exists")
+		return
+	}
+	cmd.Run = ping
+	cmd.Aliases = []string{}
+	RegisterCommand(cmd)
 }
