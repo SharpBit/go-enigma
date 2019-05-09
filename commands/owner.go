@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -28,13 +27,7 @@ func presence(ctx *Context) {
 }
 
 func init() {
-	cmd, existing := NewCommand("presence", "Changes the bot's presence.")
-	if existing {
-		fmt.Println("error: command presence already exists")
-		return
-	}
-	cmd.Dev = true
-	cmd.Run = presence
-	cmd.Aliases = []string{}
-	RegisterCommand(cmd)
+	cog := NewCog("Owner", "Developer restricted commands", true)
+	cog.AddCommand("presence", "Changes the bot's presence", []string{}, presence)
+	cog.Load()
 }

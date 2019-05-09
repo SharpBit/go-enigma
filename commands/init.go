@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/bwmarrin/discordgo"
 	discord "github.com/bwmarrin/discordgo"
 )
@@ -15,6 +17,10 @@ type Context struct {
 	Args    []string
 	Prefix  string
 }
+
+/*
+Command Structs and Functions
+*/
 
 // CommandMap is a map that gets the user's command input and retrieves its respective function
 var CommandMap = make(map[string]*Command)
@@ -63,4 +69,51 @@ func RegisterCommand(cmd *Command) {
 // UnregisterCommand removes the command from the CommandMap
 func UnregisterCommand(cmd string) {
 	delete(CommandMap, cmd)
+}
+
+/*
+Cog structs and functions
+*/
+
+// Cog is a similar class to commands.Cog in discord.py
+type Cog struct {
+	Name        string
+	Description string
+	Dev         bool
+	Commands    []*Command
+}
+
+// NewCog creates a new cog instance
+func NewCog(name, description string, dev bool) *Cog {
+	return &Cog{Name: name, Description: description, Dev: dev}
+}
+
+// AddCommand : Adds a command to the cog
+func (cog *Cog) AddCommand(name, description string, aliases []string, run func(*Context)) *Command {
+	cmd, existing := NewCommand(name, description)
+	if existing {
+		fmt.Println("error: command " + name + " already exists")
+	}
+	cmd.Run = run
+	cmd.Aliases = aliases
+	if cog.Dev == true {
+		cmd.Dev = true
+	}
+	cog.Commands = append(cog.Commands, cmd)
+
+	return cmd
+}
+
+// Load : Registers each command in the cog
+func (cog *Cog) Load() {
+	for _, cmd := range cog.Commands {
+		RegisterCommand(cmd)
+	}
+}
+
+// Unload : Unregisters each command in the cog
+func (cog *Cog) Unload() {
+	for _, cmd := range cog.Commands {
+		UnregisterCommand(cmd.Name)
+	}
 }
