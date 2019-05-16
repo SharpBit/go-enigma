@@ -100,7 +100,17 @@ func userinfo(ctx *Context) {
 		return
 	}
 
-	user := ctx.Message.Author
+	var user *discord.User
+	if len(ctx.Args) == 1 {
+		var err error
+		user, err = ctx.ParseUser(ctx.Args[0])
+		if err != nil {
+			ctx.Send("User not found.")
+			return
+		}
+	} else {
+		user = ctx.Message.Author
+	}
 
 	AccountCreationTime, err := utils.CreationTime(user.ID)
 	if err != nil {
@@ -168,9 +178,48 @@ func userinfo(ctx *Context) {
 	ctx.SendComplex("", em)
 }
 
+func avatar(ctx *Context) {
+	var user *discord.User
+	if len(ctx.Args) == 1 {
+		var err error
+		user, err = ctx.ParseUser(ctx.Args[0])
+		if err != nil {
+			ctx.Send("User not found.")
+			return
+		}
+	} else {
+		user = ctx.Message.Author
+	}
+
+	em := utils.NewEmbed().
+		SetColor(0x2ecc71).
+		SetAuthor([]string{user.String(), user.AvatarURL("")}...).
+		SetFooter("ID: " + user.ID).
+		SetImage(user.AvatarURL("")).
+		MessageEmbed
+
+	ctx.SendComplex("", em)
+}
+
+func servericon(ctx *Context) {
+	guild := ctx.Guild
+	GuildIconURL := "https://cdn.discordapp.com/icons/" + guild.ID + "/" + guild.Icon
+
+	em := utils.NewEmbed().
+		SetColor(0x2ecc71).
+		SetAuthor([]string{guild.Name, GuildIconURL}...).
+		SetFooter("ID: " + guild.ID).
+		SetImage(GuildIconURL).
+		MessageEmbed
+
+	ctx.SendComplex("", em)
+}
+
 func init() {
 	cog := NewCog("Info", "Information about certain things", false)
 	cog.AddCommand("serverinfo", "Retrieves info about the server", []string{"si"}, serverinfo)
 	cog.AddCommand("userinfo", "Gets info about a user", []string{"ui"}, userinfo)
+	cog.AddCommand("avatar", "Get the avatar for a certain user", []string{"av"}, avatar)
+	cog.AddCommand("servericon", "Get the server icon", []string{"icon"}, servericon)
 	cog.Load()
 }

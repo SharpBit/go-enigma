@@ -1,6 +1,7 @@
 package cogs
 
 import (
+	"errors"
 	"fmt"
 
 	discord "github.com/bwmarrin/discordgo"
@@ -28,6 +29,29 @@ func (ctx *Context) SendComplex(content string, embed *discord.MessageEmbed) (*d
 	return ctx.Session.ChannelMessageSendComplex(ctx.Channel.ID, data)
 }
 
+// CodeBlock returns code formatted into a codeblock to send to Discord
+func (ctx *Context) CodeBlock(content string, lang string) (formatted string) {
+	return "```" + lang + "\n" + content + "\n```"
+}
+
+// ParseUser gets User object from a Mention, Name#Discrim, or ID
+func (ctx *Context) ParseUser(input string) (user *discord.User, err error) {
+	if len(ctx.Message.Mentions) > 0 {
+		return ctx.Message.Mentions[0], nil
+	}
+
+	for _, m := range ctx.Guild.Members {
+		if m.User.Username == input[:len(input)-5] && m.User.Discriminator == input[len(input)-4:] {
+			return ctx.Session.User(m.User.ID)
+		}
+
+		if m.User.ID == input {
+			return ctx.Session.User(m.User.ID)
+		}
+	}
+	return nil, errors.New("error ParseUser: no user found")
+}
+
 /*
 Command Structs and Functions
 */
@@ -37,6 +61,9 @@ var CommandMap = make(map[string]*Command)
 
 // AliasMap finds the commands of each alias
 var AliasMap = make(map[string]string)
+
+// CogMap finds the Cog object from the name
+var CogMap = make(map[string]*Cog)
 
 // Command is a command object
 type Command struct {
@@ -80,11 +107,12 @@ type Cog struct {
 	Description string
 	Dev         bool
 	Commands    []*Command
+	Loaded      bool
 }
 
 // NewCog creates a new cog instance
 func NewCog(name, description string, dev bool) *Cog {
-	return &Cog{Name: name, Description: description, Dev: dev}
+	return &Cog{Name: name, Description: description, Dev: dev, Loaded: false}
 }
 
 // AddCommand : Adds a command to the cog
@@ -108,6 +136,8 @@ func (cog *Cog) Load() {
 	for _, cmd := range cog.Commands {
 		RegisterCommand(cmd)
 	}
+	CogMap[cog.Name] = cog
+	cog.Loaded = true
 }
 
 // Unload : Unregisters each command in the cog
@@ -115,4 +145,6 @@ func (cog *Cog) Unload() {
 	for _, cmd := range cog.Commands {
 		UnregisterCommand(cmd.Name)
 	}
+	delete(CogMap, cog.Name)
+	cog.Loaded = false
 }
