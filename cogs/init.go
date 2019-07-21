@@ -52,6 +52,27 @@ func (ctx *Context) ParseUser(input string) (user *discord.User, err error) {
 	return nil, errors.New("error ParseUser: no user found")
 }
 
+// GetBan does the same as ParseUser but checks the guild's bans and returns a string (User ID)
+func (ctx *Context) GetBan(input string) (userID string, err error) {
+
+	bans, err := ctx.Session.GuildBans(ctx.Guild.ID)
+	if err != nil {
+		ctx.Send("Do not have ban members permissions")
+		return
+	}
+
+	for _, b := range bans {
+		if b.User.Username == input[:len(input)-5] && b.User.Discriminator == input[len(input)-4:] {
+			return b.User.ID, nil
+		}
+
+		if b.User.ID == input {
+			return b.User.ID, nil
+		}
+	}
+	return "", errors.New("error GetBan: no ban found")
+}
+
 /*
 Command Structs and Functions
 */
@@ -59,7 +80,7 @@ Command Structs and Functions
 // CommandMap is a map that gets the user's command input and retrieves its respective function
 var CommandMap = make(map[string]*Command)
 
-// AliasMap finds the commands of each alias
+// AliasMap finds the command of each alias
 var AliasMap = make(map[string]string)
 
 // CogMap finds the Cog object from the name
@@ -93,8 +114,11 @@ func RegisterCommand(cmd *Command) {
 }
 
 // UnregisterCommand removes the command from the CommandMap
-func UnregisterCommand(cmd string) {
-	delete(CommandMap, cmd)
+func UnregisterCommand(cmd *Command) {
+	delete(CommandMap, cmd.Name)
+	for _, alias := range cmd.Aliases {
+		delete(AliasMap, alias)
+	}
 }
 
 /*
@@ -143,7 +167,7 @@ func (cog *Cog) Load() {
 // Unload : Unregisters each command in the cog
 func (cog *Cog) Unload() {
 	for _, cmd := range cog.Commands {
-		UnregisterCommand(cmd.Name)
+		UnregisterCommand(cmd)
 	}
 	delete(CogMap, cog.Name)
 	cog.Loaded = false
