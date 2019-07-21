@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	discord "github.com/bwmarrin/discordgo"
@@ -30,4 +32,14 @@ func GetRoles(guild *discord.Guild, member *discord.Member) []*discord.Role {
 		}
 	}
 	return roles
+}
+
+// CleanupCode removes markdown around the code
+func CleanupCode(content string) (code string) {
+	fmt.Println(content)
+	if strings.HasPrefix(content, "```") && strings.HasSuffix(content, "```") {
+		lines := strings.Split(content, "\n")
+		return strings.Join(lines[1:len(lines)-1], "\n")
+	}
+	return strings.Trim(content, "` \n")
 }
