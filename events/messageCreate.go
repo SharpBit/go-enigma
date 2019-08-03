@@ -44,7 +44,7 @@ func MessageCreate(session *discord.Session, msg *discord.MessageCreate) {
 	}
 
 	// Separates the commands from the arguments
-	input := strings.Split(msg.Content, " ")
+	input := strings.Fields(msg.Content)
 	CmdString, args := strings.Trim(input[0], prefix), input[1:]
 
 	cmd, ok := commands.CommandMap[CmdString]
@@ -61,13 +61,31 @@ func MessageCreate(session *discord.Session, msg *discord.MessageCreate) {
 		return
 	}
 
+	// Allow multiple word arguments as long as they are surrounded by quotes.
+	// i.e.  !ban Abigail Brown#0001  spamming  would return the arguments ["Abigal Brown#0001", "spamming"]
+	var ParsedArgs []string
+	var currentParsed string
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "\"") && currentParsed == "" {
+			currentParsed += arg[1:] + " "
+		} else if strings.HasSuffix(arg, "\"") && currentParsed != "" {
+			currentParsed += arg[:len(arg)-1]
+			ParsedArgs = append(ParsedArgs, currentParsed)
+			currentParsed = ""
+		} else if currentParsed != "" {
+			currentParsed += arg + " "
+		} else {
+			ParsedArgs = append(ParsedArgs, arg)
+		}
+	}
+
 	cmd.Run(&commands.Context{
 		Session: session,
 		Message: msg,
 		Guild:   guild,
 		Channel: channel,
 		Author:  msg.Author,
-		Args:    args,
+		Args:    ParsedArgs,
 		Prefix:  prefix,
 	})
 }
