@@ -5,15 +5,24 @@ import (
 	"io/ioutil"
 )
 
-// Config : Configuration from config.json
-type Config struct {
-	Token string `json:"token"`
+var conf map[string]string
+
+func GetConfig(key string) string {
+	val, ok := conf[key]
+	if !ok {
+		return ""
+	} else {
+		return val
+	}
 }
 
-// GetConfig returns config from JSON
-func GetConfig() (data Config) {
-	file, _ := ioutil.ReadFile("config.json")
-	data = Config{}
-	_ = json.Unmarshal([]byte(file), &data)
-	return
+func init() {
+	data, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(data, &conf)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -13,8 +13,7 @@ import (
 )
 
 func main() {
-	config := utils.GetConfig()
-	bot, err := discord.New("Bot " + config.Token)
+	bot, err := discord.New("Bot " + utils.GetConfig("token"))
 
 	if err != nil {
 		fmt.Println("error logging in,", err)
