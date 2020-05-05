@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"../utils"
+	"github.com/SharpBit/go-enigma/utils"
 )
 
 // Hastebin responses

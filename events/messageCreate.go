@@ -3,7 +3,7 @@ package events
 import (
 	"strings"
 
-	commands "../cogs"
+	commands "github.com/SharpBit/go-enigma/cogs"
 
 	discord "github.com/bwmarrin/discordgo"
 )
@@ -62,7 +62,7 @@ func MessageCreate(session *discord.Session, msg *discord.MessageCreate) {
 	}
 
 	// Allow multiple word arguments as long as they are surrounded by quotes.
-	// i.e.  !ban Abigail Brown#0001  spamming  would return the arguments ["Abigal Brown#0001", "spamming"]
+	// i.e.  !ban Abigail Brown#0001 spamming  would return the arguments ["Abigail Brown#0001", "spamming"]
 	var ParsedArgs []string
 	var currentParsed string
 	for _, arg := range args {

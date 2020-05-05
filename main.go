@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"./events"
-	"./utils"
+	events "github.com/SharpBit/go-enigma/events"
+	utils "github.com/SharpBit/go-enigma/utils"
 
 	discord "github.com/bwmarrin/discordgo"
 )

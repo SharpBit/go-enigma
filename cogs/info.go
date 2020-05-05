@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"../utils"
+	"github.com/SharpBit/go-enigma/utils"
 
 	discord "github.com/bwmarrin/discordgo"
 )
