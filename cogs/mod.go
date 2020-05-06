@@ -1,68 +1,51 @@
 package cogs
 
-import "strings"
+import (
+	discord "github.com/bwmarrin/discordgo"
+	"strings"
+)
 
-func ban(ctx *Context) {
-	if len(ctx.Args) == 0 {
-		ctx.Send("Please pass in a member to ban.")
-		return
-	}
-	member, err := ctx.ParseUser(ctx.Args[0])
-	if err != nil {
-		ctx.Send("Member not found.")
-		return
-	}
-
-	reason := ctx.Author.Username + "#" + ctx.Author.Discriminator
-	if len(ctx.Args) > 1 {
-		reason = reason + " (" + strings.Join(ctx.Args[1:], " ") + ")"
-	} else {
-		reason = reason + " (None)"
-	}
-	ctx.Session.GuildBanCreateWithReason(ctx.Guild.ID, member.ID, reason, 1)
-	ctx.Send("Done.")
+func ban(ctx *Context, member *discord.Member, reason ...string) (err error) {
+	ReasonFmt := ctx.Author.Username + "#" + ctx.Author.Discriminator + " (" + strings.Join(reason, " ") + ")"
+	ctx.Session.GuildBanCreateWithReason(ctx.Guild.ID, member.User.ID, ReasonFmt, 1)
+	_, err = ctx.Send("Done.")
+	return
 }
 
-func unban(ctx *Context) {
-	if len(ctx.Args) == 0 {
-		ctx.Send("Please pass in a member to unban.")
-		return
-	}
-
-	user, err := ctx.GetBan(ctx.Args[0])
+func unban(ctx *Context, NameOrID string, reason ...string) (err error) {
+	user, err := ctx.GetBan(NameOrID)
 	if err != nil {
-		ctx.Send("No ban entry " + ctx.Args[0] + " found.")
+		ctx.SendError(err, false)
 		return
 	}
 
-	ctx.Session.GuildBanDelete(ctx.Guild.ID, user)
-	ctx.Send("Done.")
+	err = ctx.Session.GuildBanDelete(ctx.Guild.ID, user)
+	if err != nil {
+		ctx.SendError(err, false)
+		return
+	}
+	_, err = ctx.Send("Done.")
+	return
 }
 
-func kick(ctx *Context) {
-	if len(ctx.Args) == 0 {
-		ctx.Send("Please pass in a member to kick.")
-		return
-	}
-	member, err := ctx.ParseUser(ctx.Args[0])
+func kick(ctx *Context, member *discord.Member, reason ...string) (err error) {
+	ReasonFmt := ctx.Author.Username + "#" + ctx.Author.Discriminator + " (" + strings.Join(reason, " ") + ")"
+	err = ctx.Session.GuildMemberDeleteWithReason(ctx.Guild.ID, member.User.ID, ReasonFmt)
 	if err != nil {
-		ctx.Send("Member not found.")
 		return
 	}
-
-	reason := ctx.Author.Username + "#" + ctx.Author.Discriminator
-	if len(ctx.Args) > 1 {
-		reason = reason + " (" + strings.Join(ctx.Args[1:], " ") + ")"
-	}
-	ctx.Session.GuildMemberDeleteWithReason(ctx.Guild.ID, member.ID, reason)
-	ctx.Send("Done.")
+	_, err = ctx.Send("Done.")
+	return
 }
 
 func init() {
 	cog := NewCog("Mod", "Guild Moderation commands", false)
-	cog.AddCommand("ban", "Ban a member from the guild", []string{}, ban)
-	cog.AddCommand("unban", "Unban a user from the guild", []string{}, unban)
-	cog.AddCommand("kick", "Kick a member from the guild", []string{}, kick)
+	cog.AddCommand("ban", "Ban a member from the guild", "<member> [reason]", ban).
+		SetDefaultArg("None")
+	cog.AddCommand("unban", "Unban a user from the guild", "<NameOrID> [reason]", unban).
+		SetDefaultArg("None")
+	cog.AddCommand("kick", "Kick a member from the guild", "<member> [reason]", kick).
+		SetDefaultArg("None")
 	cog.Load()
 
 }

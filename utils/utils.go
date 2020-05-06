@@ -9,6 +9,11 @@ import (
 	discord "github.com/bwmarrin/discordgo"
 )
 
+var (
+	DefaultUser   = &discord.User{ID: "DEFAULT"}
+	DefaultMember = &discord.Member{User: DefaultUser}
+)
+
 // CreationTime returns the creation time of a Snowflake ID relative to the creation of Discord.
 func CreationTime(ID string) (t time.Time, err error) {
 	i, err := strconv.ParseInt(ID, 10, 64)

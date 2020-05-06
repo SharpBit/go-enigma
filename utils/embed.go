@@ -9,13 +9,6 @@ type Embed struct {
 	*discordgo.MessageEmbed
 }
 
-// FieldParams [name] [value] [inline]
-type FieldParams struct {
-	Name   string
-	Value  string
-	Inline bool
-}
-
 // Constants for message embed character limits
 const (
 	EmbedLimitTitle       = 256
@@ -48,10 +41,23 @@ func (e *Embed) SetDescription(description string) *Embed {
 }
 
 //AddField [FieldParams]
-func (e *Embed) AddField(p FieldParams) *Embed {
-	name := p.Name
-	value := p.Value
-	inline := p.Inline
+func (e *Embed) AddField(args ...interface{}) *Embed {
+	name := ""
+	value := ""
+	inline := false
+
+	switch {
+	case len(args) > 2:
+		inline = args[2].(bool)
+		fallthrough
+	case len(args) > 1:
+		value = args[1].(string)
+		fallthrough
+	case len(args) > 0:
+		name = args[0].(string)
+	case len(args) == 0:
+		return e
+	}
 
 	if len(value) > 1024 {
 		value = value[:1024]

@@ -1,6 +1,7 @@
 package cogs
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -11,14 +12,15 @@ import (
 	discord "github.com/bwmarrin/discordgo"
 )
 
-func serverinfo(ctx *Context) {
+func serverinfo(ctx *Context) (err error) {
 	guild := ctx.Guild
 	channel := ctx.Channel
 
 	if channel.Type == discord.ChannelTypeDM || channel.Type == discord.ChannelTypeGroupDM {
-		return
+		return fmt.Errorf("CommandCheckError: Command cannot be run in a DM.")
 	}
 
+	// Get the number of online members
 	onlineMembers := 0
 	for _, m := range guild.Presences {
 		if m.Status != discord.StatusOffline {
@@ -26,15 +28,18 @@ func serverinfo(ctx *Context) {
 		}
 	}
 
+	// Build the Icon URL and get the time of guild creation
 	GuildIconURL := "https://cdn.discordapp.com/icons/" + guild.ID + "/" + guild.Icon
 	GuildCreationTime, err := utils.CreationTime(guild.ID)
 	if err != nil {
-		panic(err)
+		return
 	}
 
+	// Format the description
 	DaysAgo := strconv.Itoa(int(time.Since(GuildCreationTime).Hours() / 24))
 	desc := "This server was created on " + GuildCreationTime.Format("Mon 01/02/2006") + " at " + GuildCreationTime.Format("03:04 pm") + ". That's over " + DaysAgo + " days ago!"
 
+	// Convert constants into human readable verification levels
 	var VerificationFmt string
 	switch guild.VerificationLevel {
 	case discord.VerificationLevelNone:
@@ -49,6 +54,7 @@ func serverinfo(ctx *Context) {
 		VerificationFmt = "Very High"
 	}
 
+	// Get the number of Animated emojis
 	AnimatedEmojisCount := 0
 	for _, e := range guild.Emojis {
 		if e.Animated == true {
@@ -56,6 +62,7 @@ func serverinfo(ctx *Context) {
 		}
 	}
 
+	// Get the number of text and voice channels
 	TextChannels := 0
 	VoiceChannels := 0
 
@@ -73,48 +80,46 @@ func serverinfo(ctx *Context) {
 		return
 	}
 
+	// Build the embed
 	em := utils.NewEmbed().
 		SetAuthor(guild.Name).
 		SetDescription(desc).
 		SetColor(0x2ecc71).
 		SetThumbnail(GuildIconURL).
-		SetFooter("ID: " + guild.ID).
-		AddField(utils.FieldParams{Name: "Owner", Value: owner.String()}).
-		AddField(utils.FieldParams{Name: "Members", Value: strconv.Itoa(onlineMembers) + "/" + strconv.Itoa(guild.MemberCount) + " online"}).
-		AddField(utils.FieldParams{Name: "Region", Value: guild.Region}).
-		AddField(utils.FieldParams{Name: "Verification Level", Value: VerificationFmt}).
-		AddField(utils.FieldParams{Name: "Text Channels", Value: strconv.Itoa(TextChannels)}).
-		AddField(utils.FieldParams{Name: "Voice Channels", Value: strconv.Itoa(VoiceChannels)}).
-		AddField(utils.FieldParams{Name: "Roles", Value: strconv.Itoa(len(guild.Roles))}).
-		AddField(utils.FieldParams{Name: "Emojis", Value: strconv.Itoa(len(guild.Emojis)-AnimatedEmojisCount) + "/" + strconv.Itoa(AnimatedEmojisCount) + " (normal/animated)"}).
+		SetFooter("ID: "+guild.ID).
+		AddField("Owner", owner.String()).
+		AddField("Members", strconv.Itoa(onlineMembers)+"/"+strconv.Itoa(guild.MemberCount)+" online").
+		AddField("Region", guild.Region).
+		AddField("Verification Level", VerificationFmt).
+		AddField("Text Channels", strconv.Itoa(TextChannels)).
+		AddField("Voice Channels", strconv.Itoa(VoiceChannels)).
+		AddField("Roles", strconv.Itoa(len(guild.Roles))).
+		AddField("Emojis", strconv.Itoa(len(guild.Emojis)-AnimatedEmojisCount)+"/"+strconv.Itoa(AnimatedEmojisCount)+" (normal/animated)").
 		InlineAllFields().MessageEmbed
 
-	ctx.SendComplex("", em)
+	_, err = ctx.SendComplex("", em)
+	return
 }
 
-func userinfo(ctx *Context) {
+func userinfo(ctx *Context, member *discord.Member) (err error) {
 	guild := ctx.Guild
 	channel := ctx.Channel
 
 	if channel.Type == discord.ChannelTypeDM || channel.Type == discord.ChannelTypeGroupDM {
-		return
+		return fmt.Errorf("CommandCheckError: Command cannot be run in a DM.")
 	}
 
 	var user *discord.User
-	if len(ctx.Args) == 1 {
-		var err error
-		user, err = ctx.ParseUser(ctx.Args[0])
-		if err != nil {
-			ctx.Send("User not found.")
-			return
-		}
+	if member == nil {
+		member = ctx.Message.Member
+		user = ctx.Author
 	} else {
-		user = ctx.Message.Author
+		user = member.User
 	}
 
 	AccountCreationTime, err := utils.CreationTime(user.ID)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	DaysAgo := strconv.Itoa(int(time.Since(AccountCreationTime).Hours() / 24))
@@ -122,104 +127,102 @@ func userinfo(ctx *Context) {
 
 	members := guild.Members
 	sort.Slice(members, func(i, j int) bool {
-		a, err := members[i].JoinedAt.Parse()
-		if err != nil {
-			panic(err)
-		}
-		b, err := members[j].JoinedAt.Parse()
-		if err != nil {
-			panic(err)
-		}
+		a, _ := members[i].JoinedAt.Parse()
+		b, _ := members[j].JoinedAt.Parse()
 		return a.Unix() < b.Unix()
 	})
 
-	MemberCount := 0
-	var member *discord.Member
+	// Get the Member Join Position
+	var MemberCount int
 	for i, v := range members {
 		if v.User.ID == user.ID {
-			member = v
 			MemberCount = i + 1
 		}
 	}
 
-	if member == nil {
-		ctx.Send("User not found.")
-		return
-	}
-
+	// Sort the roles from Highest to Lowest
 	roles := utils.GetRoles(guild, member)
 	sort.Slice(roles, func(i, j int) bool {
 		return roles[i].Position > roles[j].Position
 	})
+
+	// Get the role names from the role list
 	RoleNames := []string{}
 	for _, r := range roles {
 		RoleNames = append(RoleNames, r.Name)
 	}
 
+	// Format the list of roles and get the join time
 	RolesFmt := strings.Join(RoleNames, ", ")
 	JoinedAt, err := member.JoinedAt.Parse()
 	if err != nil {
-		panic(err)
+		return
 	}
 
+	// Build the embed
 	em := utils.NewEmbed().
 		SetDescription(desc).
 		SetColor(0x2ecc71).
 		SetThumbnail(user.AvatarURL("")).
-		SetAuthor([]string{user.String(), user.AvatarURL("")}...).
-		SetFooter("ID: " + user.ID).
-		AddField(utils.FieldParams{Name: "Name", Value: user.Username, Inline: true}).
-		AddField(utils.FieldParams{Name: "Member No.", Value: strconv.Itoa(MemberCount), Inline: true}).
-		AddField(utils.FieldParams{Name: "Account Created", Value: AccountCreationTime.Format("Mon 01/02/2006"), Inline: true}).
-		AddField(utils.FieldParams{Name: "Joined At", Value: JoinedAt.Format("Mon 01/02/2006"), Inline: true}).
-		AddField(utils.FieldParams{Name: "Roles", Value: RolesFmt, Inline: false}).
+		SetAuthor(user.String(), user.AvatarURL("")).
+		SetFooter("ID: "+user.ID).
+		AddField("Name", user.Username, true).
+		AddField("Member No.", strconv.Itoa(MemberCount), true).
+		AddField("Account Created", AccountCreationTime.Format("Mon 01/02/2006"), true).
+		AddField("Joined At", JoinedAt.Format("Mon 01/02/2006"), true).
+		AddField("Roles", RolesFmt, false).
 		MessageEmbed
 
-	ctx.SendComplex("", em)
+	_, err = ctx.SendComplex("", em)
+	return
 }
 
-func avatar(ctx *Context) {
-	var user *discord.User
-	if len(ctx.Args) == 1 {
-		var err error
-		user, err = ctx.ParseUser(ctx.Args[0])
-		if err != nil {
-			ctx.Send("User not found.")
-			return
-		}
-	} else {
+func avatar(ctx *Context, user *discord.User) (err error) {
+	if user == nil {
 		user = ctx.Message.Author
 	}
 
 	em := utils.NewEmbed().
 		SetColor(0x2ecc71).
-		SetAuthor([]string{user.String(), user.AvatarURL("")}...).
+		SetAuthor(user.String(), user.AvatarURL("")).
 		SetFooter("ID: " + user.ID).
 		SetImage(user.AvatarURL("")).
 		MessageEmbed
 
-	ctx.SendComplex("", em)
+	_, err = ctx.SendComplex("", em)
+	return
 }
 
-func servericon(ctx *Context) {
+func servericon(ctx *Context) (err error) {
+	if ctx.Channel.Type == discord.ChannelTypeDM || ctx.Channel.Type == discord.ChannelTypeGroupDM {
+		return fmt.Errorf("CommandCheckError: Command cannot be run in a DM.")
+	}
+
 	guild := ctx.Guild
 	GuildIconURL := "https://cdn.discordapp.com/icons/" + guild.ID + "/" + guild.Icon
 
 	em := utils.NewEmbed().
 		SetColor(0x2ecc71).
-		SetAuthor([]string{guild.Name, GuildIconURL}...).
+		SetAuthor(guild.Name, GuildIconURL).
 		SetFooter("ID: " + guild.ID).
 		SetImage(GuildIconURL).
 		MessageEmbed
 
-	ctx.SendComplex("", em)
+	_, err = ctx.SendComplex("", em)
+	return err
 }
 
 func init() {
 	cog := NewCog("Info", "Information about certain things", false)
-	cog.AddCommand("serverinfo", "Retrieves info about the server", []string{"si"}, serverinfo)
-	cog.AddCommand("userinfo", "Gets info about a user", []string{"ui"}, userinfo)
-	cog.AddCommand("avatar", "Get the avatar for a certain user", []string{"av"}, avatar)
-	cog.AddCommand("servericon", "Get the server icon", []string{"icon"}, servericon)
+	cog.AddCommand("serverinfo", "Retrieves info about the server", "", serverinfo).
+		SetAliases("server", "si")
+	cog.AddCommand("userinfo", "Gets info about a user", "[member]", userinfo).
+		SetAliases("user", "ui").
+		SetDefaultArg(nil)
+	cog.AddCommand("avatar", "Get the avatar for a certain user", "[user]", avatar).
+		SetAliases("av").
+		SetDefaultArg(nil)
+	cog.AddCommand("servericon", "Get the server icon", "", servericon).
+		SetAliases("icon")
 	cog.Load()
 }

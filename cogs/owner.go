@@ -1,50 +1,46 @@
 package cogs
 
 import (
+	"fmt"
 	"strings"
 )
 
-func presence(ctx *Context) {
-	args := ctx.Args
-	usage := "Usage: `//play <activity> [url:stream] [message]`"
-	if len(args) == 0 {
-		ctx.Send(usage)
-		return
-	}
-
-	switch args[0] {
+func presence(ctx *Context, ActivityType string, UrlOrMessage ...string) (err error) {
+	switch ActivityType {
 	case "play":
-		if len(args) < 2 {
-			ctx.Send(usage)
-			return
+		if len(UrlOrMessage) < 1 {
+			return fmt.Errorf("ArgumentError: You must provide a message to show.")
 		}
-		ctx.Session.UpdateStatus(0, strings.Join(args[1:], " "))
-		ctx.Send("Set `play` status to `" + strings.Join(args[1:], " ") + "`")
+		message := strings.Join(UrlOrMessage, " ")
+		ctx.Session.UpdateStatus(0, message)
+		_, err = ctx.Send("Set `play` status to `" + message + "`")
 	case "listen":
-		if len(args) < 2 {
-			ctx.Send(usage)
-			return
+		if len(UrlOrMessage) < 1 {
+			return fmt.Errorf("ArgumentError: You must provide a message to show.")
 		}
-		ctx.Session.UpdateListeningStatus(strings.Join(args[1:], " "))
-		ctx.Send("Set `listen` status to `" + strings.Join(args[1:], " ") + "`")
+		message := strings.Join(UrlOrMessage, " ")
+		ctx.Session.UpdateListeningStatus(message)
+		_, err = ctx.Send("Set `listen` status to `" + message + "`")
 	case "stream":
-		if len(args) < 3 {
-			ctx.Send(usage)
-			return
+		if len(UrlOrMessage) < 2 {
+			return fmt.Errorf("ArgumentError: You must provide a url to stream and a message to show.")
 		}
-		CleanURL := strings.Replace(strings.Replace(args[1], "<", "", 1), ">", "", 1)
-		ctx.Session.UpdateStreamingStatus(0, strings.Join(args[2:], " "), CleanURL)
-		ctx.Send("Set `stream` status to `" + strings.Join(args[2:], " ") + "` at URL <" + CleanURL + ">")
+		// Remove the angled brackets <> surrounding a URL that prevent an embed from appearing
+		CleanURL := strings.Replace(strings.Replace(UrlOrMessage[0], "<", "", 1), ">", "", 1)
+		ctx.Session.UpdateStreamingStatus(0, strings.Join(UrlOrMessage[1:], " "), CleanURL)
+		_, err = ctx.Send("Set `stream` status to `" + strings.Join(UrlOrMessage[1:], " ") + "` at URL <" + CleanURL + ">")
 	case "reset":
-		ctx.Session.UpdateStatus(0, "")
-		ctx.Send("Presence reset.")
+		ctx.Session.UpdateStatus(0, "Go, Discord, go!")
+		_, err = ctx.Send("Presence reset.")
 	default:
-		ctx.Send(args[0] + " is not an option. Select from `play`, `listen`, `stream`, `reset`")
+		_, err = ctx.Send(ActivityType + " is not an option. Select from `play`, `listen`, `stream`, `reset`")
 	}
+	return
 }
 
 func init() {
 	cog := NewCog("Owner", "Developer restricted commands", true)
-	cog.AddCommand("presence", "Changes the bot's presence", []string{}, presence)
+	cog.AddCommand("presence", "Changes the bot's presence", "<ActivityType> [url:stream] [message]", presence).
+		SetDefaultArg([]string{})
 	cog.Load()
 }

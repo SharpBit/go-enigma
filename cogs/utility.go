@@ -16,42 +16,31 @@ type Hastebin struct {
 	Key string `json:"string"`
 }
 
-func tinyurl(ctx *Context) {
-	if len(ctx.Args) == 0 {
-		ctx.Send("Please pass in a URL")
-		return
-	}
-	link := ctx.Args[0]
+func tinyurl(ctx *Context, link string) (err error) {
 	url := "http://tinyurl.com/api-create.php?url=" + link
 
 	resp, err := http.Get(url)
 	if err != nil {
-		ctx.Send("An error has occured.")
-		return
+		return fmt.Errorf("error when getting tinyurl response")
 	}
 
 	defer resp.Body.Close()
 	ShortenedURL, _ := ioutil.ReadAll(resp.Body)
 
-	ctx.Send("Here is your shortened URL: <" + string(ShortenedURL) + ">")
-
+	_, err = ctx.Send("Here is your shortened URL: <" + string(ShortenedURL) + ">")
+	return
 }
 
-func hastebin(ctx *Context) {
-	if len(ctx.Args) == 0 {
-		ctx.Send("Please send some code")
-		return
-	}
-	code := utils.CleanupCode(strings.Join(ctx.Args, " "))
-	fmt.Println(code)
+func hastebin(ctx *Context, code ...string) (err error) {
+	pushData := utils.CleanupCode(strings.Join(code, " "))
+	fmt.Println(pushData)
 
-	jsonData := map[string]string{"data": code}
+	jsonData := map[string]string{"data": pushData}
 	jsonValue, _ := json.Marshal(jsonData)
 
 	resp, err := http.Post("https://hastebin.com/documents", "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
-		ctx.Send("error making POST request")
-		return
+		return fmt.Errorf("error making POST request")
 	}
 
 	defer resp.Body.Close()
@@ -60,17 +49,17 @@ func hastebin(ctx *Context) {
 	data := &Hastebin{}
 	err = json.Unmarshal(body, data)
 	if err != nil {
-		ctx.Send("error unparsing returned JSON")
-		return
+		return fmt.Errorf("error unparsing returned JSON")
 	}
 
-	ctx.Send("Hastebin-ified! Here is your code: https://hastebin.com/" + data.Key + ".go")
+	_, err = ctx.Send("Hastebin-ified! Here is your code: https://hastebin.com/" + data.Key + ".go")
+	return
 
 }
 
 func init() {
 	cog := NewCog("Utility", "Useful commands to help you out", false)
-	cog.AddCommand("tinyurl", "Shorten a URL with the tinyurl API", []string{}, tinyurl)
-	// cog.AddCommand("hastebin", "Hastebin-ify your code!", []string{}, hastebin)
+	cog.AddCommand("tinyurl", "Shorten a URL with the tinyurl API", "<link>", tinyurl)
+	// cog.AddCommand("hastebin", "Hastebin-ify your code!", "<code>", hastebin)
 	cog.Load()
 }
