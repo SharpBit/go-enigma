@@ -3,8 +3,6 @@ package commands
 import (
 	"fmt"
 
-	"github.com/SharpBit/go-enigma/utils"
-
 	discord "github.com/bwmarrin/discordgo"
 )
 
@@ -32,14 +30,20 @@ func (ctx *Context) SendComplex(content string, embed *discord.MessageEmbed) (*d
 
 // SendError replies with the error and help if sendHelp is true
 func (ctx *Context) SendError(err error, sendHelp bool) (*discord.Message, error) {
-	usageString := "`" + ctx.Prefix + ctx.Command.Name + " " + ctx.Command.Usage + "`"
-	em := utils.NewEmbed().
-		SetColor(0xe74c3c).
-		SetTitle(usageString).
-		SetDescription(ctx.Command.Description).
-		MessageEmbed
-	data := &discord.MessageSend{Content: err.Error(), Embed: em}
-	return ctx.Session.ChannelMessageSendComplex(ctx.Channel.ID, data)
+	if sendHelp {
+		usageString := "`" + ctx.Prefix + ctx.Command.Name
+		if ctx.Command.Usage != "" {
+			usageString += " " + ctx.Command.Usage
+		}
+		usageString += "`"
+		em := NewEmbed().
+			SetColor(0xe74c3c).
+			SetTitle(usageString).
+			SetDescription(ctx.Command.Description).
+			MessageEmbed
+		return ctx.SendComplex(err.Error(), em)
+	}
+	return ctx.Send(err.Error())
 }
 
 // CodeBlock returns code formatted into a codeblock to send to Discord

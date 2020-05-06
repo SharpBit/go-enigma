@@ -59,7 +59,7 @@ func hastebin(ctx *commands.Context, code ...string) (err error) {
 }
 
 func init() {
-	cog := commands.NewCog("Utility", "Useful commands to help you out", false)
+	cog := commands.NewCog("Utility", "Useful commands to help you out")
 	cog.AddCommand("tinyurl", "Shorten a URL with the tinyurl API", "<link>", tinyurl)
 	// cog.AddCommand("hastebin", "Hastebin-ify your code!", "<code>", hastebin)
 	cog.Load()

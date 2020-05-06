@@ -7,8 +7,8 @@ import (
 	"syscall"
 
 	_ "github.com/SharpBit/go-enigma/cogs" // to create/load the commands
-	events "github.com/SharpBit/go-enigma/events"
-	utils "github.com/SharpBit/go-enigma/utils"
+	"github.com/SharpBit/go-enigma/events"
+	"github.com/SharpBit/go-enigma/utils"
 
 	discord "github.com/bwmarrin/discordgo"
 )

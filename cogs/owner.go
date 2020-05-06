@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/SharpBit/go-enigma/commands"
+	"github.com/SharpBit/go-enigma/utils"
 )
 
 func presence(ctx *commands.Context, ActivityType string, UrlOrMessage ...string) (err error) {
@@ -41,8 +42,9 @@ func presence(ctx *commands.Context, ActivityType string, UrlOrMessage ...string
 }
 
 func init() {
-	cog := commands.NewCog("Owner", "Developer restricted commands", true)
+	cog := commands.NewCog("Owner", "Developer restricted commands")
 	cog.AddCommand("presence", "Changes the bot's presence", "<ActivityType> [url:stream] [message]", presence).
-		SetDefaultArg([]string{})
+		SetDefaultArg([]string{}).
+		AddCheck(utils.OwnerOnly)
 	cog.Load()
 }

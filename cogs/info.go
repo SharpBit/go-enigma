@@ -82,7 +82,7 @@ func serverinfo(ctx *commands.Context) (err error) {
 	}
 
 	// Build the embed
-	em := utils.NewEmbed().
+	em := commands.NewEmbed().
 		SetAuthor(guild.Name).
 		SetDescription(desc).
 		SetColor(0x2ecc71).
@@ -161,7 +161,7 @@ func userinfo(ctx *commands.Context, member *discord.Member) (err error) {
 	}
 
 	// Build the embed
-	em := utils.NewEmbed().
+	em := commands.NewEmbed().
 		SetDescription(desc).
 		SetColor(0x2ecc71).
 		SetThumbnail(user.AvatarURL("256")).
@@ -183,7 +183,7 @@ func avatar(ctx *commands.Context, user *discord.User) (err error) {
 		user = ctx.Message.Author
 	}
 
-	em := utils.NewEmbed().
+	em := commands.NewEmbed().
 		SetColor(0x2ecc71).
 		SetAuthor(user.String(), user.AvatarURL("64")).
 		SetFooter("ID: " + user.ID).
@@ -201,7 +201,7 @@ func servericon(ctx *commands.Context) (err error) {
 
 	guild := ctx.Guild
 
-	em := utils.NewEmbed().
+	em := commands.NewEmbed().
 		SetColor(0x2ecc71).
 		SetAuthor(guild.Name, guild.IconURL()+"?size=64").
 		SetFooter("ID: " + guild.ID).
@@ -213,16 +213,19 @@ func servericon(ctx *commands.Context) (err error) {
 }
 
 func init() {
-	cog := commands.NewCog("Info", "Information about certain things", false)
+	cog := commands.NewCog("Info", "Information about certain things")
 	cog.AddCommand("serverinfo", "Retrieves info about the server", "", serverinfo).
-		SetAliases("server", "si")
+		SetAliases("server", "si").
+		AddCheck(utils.GuildOnly)
 	cog.AddCommand("userinfo", "Gets info about a user", "[member]", userinfo).
 		SetAliases("user", "ui").
-		SetDefaultArg(nil)
+		SetDefaultArg(nil).
+		AddCheck(utils.GuildOnly)
 	cog.AddCommand("avatar", "Get the avatar for a certain user", "[user]", avatar).
 		SetAliases("av").
 		SetDefaultArg(nil)
 	cog.AddCommand("servericon", "Get the server icon", "", servericon).
-		SetAliases("icon")
+		SetAliases("icon").
+		AddCheck(utils.GuildOnly)
 	cog.Load()
 }

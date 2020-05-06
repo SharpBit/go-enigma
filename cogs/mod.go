@@ -41,7 +41,7 @@ func kick(ctx *commands.Context, member *discord.Member, reason ...string) (err 
 }
 
 func init() {
-	cog := commands.NewCog("Mod", "Guild Moderation commands", false)
+	cog := commands.NewCog("Mod", "Guild Moderation commands")
 	cog.AddCommand("ban", "Ban a member from the guild", "<member> [reason]", ban).
 		SetDefaultArg("None")
 	cog.AddCommand("unban", "Unban a user from the guild", "<NameOrID> [reason]", unban).

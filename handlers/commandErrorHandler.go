@@ -26,6 +26,12 @@ func HandleCommandError(ctx *commands.Context, err error) {
 		return
 	}
 
+	// Command check failed
+	if strings.HasPrefix(err.Error(), "CommandCheckError") {
+		ctx.SendError(err, false)
+		return
+	}
+
 	// Log any other errors without panicking
 	fmt.Println(err)
 	debug.PrintStack()

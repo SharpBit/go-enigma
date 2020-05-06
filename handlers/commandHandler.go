@@ -28,15 +28,6 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 		return nil, nil
 	}
 
-	// gets the message's guild
-	guild, err := session.State.Guild(msg.GuildID)
-	if err != nil {
-		guild, err = session.Guild(msg.GuildID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	// gets the message's channel
 	channel, err := session.State.Channel(msg.ChannelID)
 	if err != nil {
@@ -49,11 +40,23 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 	ctx = &commands.Context{
 		Session: session,
 		Message: msg,
-		Guild:   guild,
 		Channel: channel,
 		Author:  msg.Author,
 		Prefix:  prefix,
 	}
+
+	// gets the message's guild
+	guild, err := session.State.Guild(msg.GuildID)
+	if err != nil {
+		guild, err = session.Guild(msg.GuildID)
+		if err != nil {
+			if !(channel.Type == discord.ChannelTypeDM || channel.Type == discord.ChannelTypeGroupDM) {
+				return nil, err
+			}
+		}
+	}
+
+	ctx.Guild = guild
 
 	// Separates the commands from the arguments
 	input := strings.Fields(msg.Content)
@@ -72,9 +75,11 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 
 	ctx.Command = cmd
 
-	// Ignore developer commands if the owner did not invoke the command
-	if cmd.Dev == true && msg.Author.ID != OwnerID {
-		return ctx, fmt.Errorf("PermissionError: Author is not owner")
+	for _, check := range cmd.Checks {
+		passed, err := check(ctx)
+		if !passed {
+			return ctx, err
+		}
 	}
 
 	// Allow multiple word arguments as long as they are surrounded by quotes.

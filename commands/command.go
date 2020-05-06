@@ -20,7 +20,7 @@ type Command struct {
 	Name           string
 	Description    string
 	Aliases        []string
-	Dev            bool
+	Checks         []func(*Context) (bool, error)
 	Usage          string
 	Run            reflect.Value
 	HasOptionalArg bool
@@ -60,6 +60,19 @@ func (cmd *Command) SetDefaultArg(def interface{}) *Command {
 	cmd.DefaultArg = reflect.ValueOf(def)
 	cmd.HasOptionalArg = true
 	return cmd
+}
+
+// AddCheck: Adds a check to the command to be run before command invokation. Must return (bool, err)
+func (cmd *Command) AddCheck(check func(*Context) (bool, error)) *Command {
+	cmd.Checks = append(cmd.Checks, check)
+	return cmd
+}
+
+// RemoveChecks: Removes all checks and returns the command and check function
+func (cmd *Command) RemoveChecks() (*Command, []func(*Context) (bool, error)) {
+	checks := cmd.Checks
+	cmd.Checks = []func(*Context) (bool, error){}
+	return cmd, checks
 }
 
 // NewCommand creates a new command

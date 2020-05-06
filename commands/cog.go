@@ -16,14 +16,13 @@ Cog structs and functions
 type Cog struct {
 	Name        string
 	Description string
-	Dev         bool
 	Commands    []*Command
 	Loaded      bool
 }
 
 // NewCog creates a new cog instance
-func NewCog(name, description string, dev bool) *Cog {
-	return &Cog{Name: name, Description: description, Dev: dev, Loaded: false}
+func NewCog(name, description string) *Cog {
+	return &Cog{Name: name, Description: description, Loaded: false}
 }
 
 // AddCommand : Adds a command to the cog
@@ -33,9 +32,6 @@ func (cog *Cog) AddCommand(name, description string, usage string, run interface
 		panic(fmt.Errorf("CogError: command/alias " + name + " already exists"))
 	}
 	cmd.Run = reflect.ValueOf(run)
-	if cog.Dev == true {
-		cmd.Dev = true
-	}
 	cmd.SetUsage(usage)
 	cog.Commands = append(cog.Commands, cmd)
 
