@@ -1,6 +1,9 @@
 package commands
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 /*
 Command Structs and Functions
@@ -37,13 +40,17 @@ func (cmd *Command) SetAliases(aliases ...string) *Command {
 	for _, alias := range aliases {
 		// Check to see if the alias is already registered as a command or alias
 		_, existing := AliasMap[alias]
-		if !existing {
-			_, existing = CommandMap[alias]
-			if !existing {
-				// Not registered yet, add it to the aliases
-				cmd.Aliases = append(cmd.Aliases, alias)
-			}
+		if existing {
+			panic(fmt.Errorf("CogError: alias " + alias + " already exists"))
 		}
+
+		_, existing = CommandMap[alias]
+		if existing {
+			panic(fmt.Errorf("CogError: command " + alias + " already exists"))
+		}
+
+		// Not registered yet, add it to the aliases
+		cmd.Aliases = append(cmd.Aliases, alias)
 	}
 	return cmd
 }
@@ -61,6 +68,12 @@ func NewCommand(name, description string) (cmd *Command, existing bool) {
 	if existing {
 		return nil, existing
 	}
+
+	_, existing = AliasMap[name]
+	if existing {
+		return nil, existing
+	}
+
 	cmd = &Command{Name: name, Description: description}
 	return cmd, existing
 }

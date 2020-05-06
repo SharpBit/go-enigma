@@ -30,7 +30,7 @@ func NewCog(name, description string, dev bool) *Cog {
 func (cog *Cog) AddCommand(name, description string, usage string, run interface{}) *Command {
 	cmd, existing := NewCommand(name, description)
 	if existing {
-		fmt.Println("error: command " + name + " already exists")
+		panic(fmt.Errorf("CogError: command/alias " + name + " already exists"))
 	}
 	cmd.Run = reflect.ValueOf(run)
 	if cog.Dev == true {
