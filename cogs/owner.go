@@ -3,9 +3,11 @@ package cogs
 import (
 	"fmt"
 	"strings"
+
+	"github.com/SharpBit/go-enigma/commands"
 )
 
-func presence(ctx *Context, ActivityType string, UrlOrMessage ...string) (err error) {
+func presence(ctx *commands.Context, ActivityType string, UrlOrMessage ...string) (err error) {
 	switch ActivityType {
 	case "play":
 		if len(UrlOrMessage) < 1 {
@@ -39,7 +41,7 @@ func presence(ctx *Context, ActivityType string, UrlOrMessage ...string) (err er
 }
 
 func init() {
-	cog := NewCog("Owner", "Developer restricted commands", true)
+	cog := commands.NewCog("Owner", "Developer restricted commands", true)
 	cog.AddCommand("presence", "Changes the bot's presence", "<ActivityType> [url:stream] [message]", presence).
 		SetDefaultArg([]string{})
 	cog.Load()

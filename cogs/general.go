@@ -1,25 +1,29 @@
 package cogs
 
-import "strings"
+import (
+	"strings"
 
-func ping(ctx *Context) (err error) {
+	"github.com/SharpBit/go-enigma/commands"
+)
+
+func ping(ctx *commands.Context) (err error) {
 	_, err = ctx.Send("Pong!")
 	return
 }
 
-func help(ctx *Context) (err error) {
+func help(ctx *commands.Context) (err error) {
 	var msg string
 	owner := ctx.Message.Author.ID == "281821029490229251"
 
 	var MaxSig int
-	for name := range CommandMap {
+	for name := range commands.CommandMap {
 		if len(name) > MaxSig {
 			MaxSig = len(name)
 		}
 	}
 	MaxSig += 2
 
-	for name, cog := range CogMap {
+	for name, cog := range commands.CogMap {
 		if cog.Dev && !owner {
 			continue
 		}
@@ -38,7 +42,7 @@ func help(ctx *Context) (err error) {
 }
 
 func init() {
-	cog := NewCog("General", "", false)
+	cog := commands.NewCog("General", "", false)
 	cog.AddCommand("ping", "Pong!", "", ping)
 	cog.AddCommand("help", "Shows this message", "", help)
 	cog.Load()

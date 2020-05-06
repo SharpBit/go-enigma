@@ -1,217 +1,23 @@
-package cogs
+package handlers
 
 import (
 	"fmt"
 	"reflect"
-	"runtime/debug"
 	"strconv"
 	"strings"
 
+	"github.com/SharpBit/go-enigma/commands"
 	"github.com/SharpBit/go-enigma/utils"
-
 	discord "github.com/bwmarrin/discordgo"
 )
 
 var (
 	prefix  = utils.GetConfig("prefix")
-	OwnerID = utils.GetConfig("owner_id")
+	OwnerID = utils.GetConfig("ownerID")
 )
 
-// Context: A class that stores information about the message and the Command
-type Context struct {
-	Session *discord.Session
-	Message *discord.MessageCreate
-	Guild   *discord.Guild
-	Channel *discord.Channel
-	Author  *discord.User
-	Prefix  string
-	Command *Command
-}
-
-// Send a message to the channel
-func (ctx *Context) Send(content string) (*discord.Message, error) {
-	return ctx.Session.ChannelMessageSend(ctx.Channel.ID, content)
-}
-
-// SendComplex an embed/complex message to the channel
-func (ctx *Context) SendComplex(content string, embed *discord.MessageEmbed) (*discord.Message, error) {
-	data := &discord.MessageSend{Content: content, Embed: embed}
-	return ctx.Session.ChannelMessageSendComplex(ctx.Channel.ID, data)
-}
-
-// SendError replies with the error and help if sendHelp is true
-func (ctx *Context) SendError(err error, sendHelp bool) (*discord.Message, error) {
-	usageString := "`" + ctx.Prefix + ctx.Command.Name + " " + ctx.Command.Usage + "`"
-	em := utils.NewEmbed().
-		SetColor(0xe74c3c).
-		SetTitle(usageString).
-		SetDescription(ctx.Command.Description).
-		MessageEmbed
-	data := &discord.MessageSend{Content: err.Error(), Embed: em}
-	return ctx.Session.ChannelMessageSendComplex(ctx.Channel.ID, data)
-}
-
-// CodeBlock returns code formatted into a codeblock to send to Discord
-func (ctx *Context) CodeBlock(content string, lang string) (formatted string) {
-	return "```" + lang + "\n" + content + "\n```"
-}
-
-// GetBan: Checks the guild's bans and returns a string (User ID)
-func (ctx *Context) GetBan(input string) (userID string, err error) {
-
-	bans, err := ctx.Session.GuildBans(ctx.Guild.ID)
-	if err != nil {
-		return "", fmt.Errorf("BotPermissionError: Do not have ban members permissions.")
-	}
-
-	for _, b := range bans {
-		if len(input) > 5 && b.User.Username == input[:len(input)-5] && b.User.Discriminator == input[len(input)-4:] {
-			return b.User.ID, nil
-		}
-
-		if b.User.ID == input {
-			return b.User.ID, nil
-		}
-	}
-	return "", fmt.Errorf("NotFoundError: no ban found")
-}
-
-/*
-Command Structs and Functions
-*/
-
-// CommandMap is a map that gets the user's command input and retrieves its respective function
-var CommandMap = make(map[string]*Command)
-
-// AliasMap finds the command of each alias
-var AliasMap = make(map[string]string)
-
-// CogMap finds the Cog object from the name
-var CogMap = make(map[string]*Cog)
-
-// Command is a command object
-type Command struct {
-	Name           string
-	Description    string
-	Aliases        []string
-	Dev            bool
-	Usage          string
-	Run            reflect.Value
-	HasOptionalArg bool
-	DefaultArg     reflect.Value
-}
-
-func (cmd *Command) Type() reflect.Type {
-	return reflect.TypeOf(cmd.Run)
-}
-
-func (cmd *Command) SetUsage(usage string) *Command {
-	cmd.Usage = usage
-	return cmd
-}
-
-func (cmd *Command) SetAliases(aliases ...string) *Command {
-	for _, alias := range aliases {
-		// Check to see if the alias is already registered as a command or alias
-		_, existing := AliasMap[alias]
-		if !existing {
-			_, existing = CommandMap[alias]
-			if !existing {
-				// Not registered yet, add it to the aliases
-				cmd.Aliases = append(cmd.Aliases, alias)
-			}
-		}
-	}
-	return cmd
-}
-
-// SetDefaultArg: Makes the last argument optional and will pass in a default argument if not provided
-func (cmd *Command) SetDefaultArg(def interface{}) *Command {
-	cmd.DefaultArg = reflect.ValueOf(def)
-	cmd.HasOptionalArg = true
-	return cmd
-}
-
-// NewCommand creates a new command
-func NewCommand(name, description string) (cmd *Command, existing bool) {
-	_, existing = CommandMap[name]
-	if existing {
-		return nil, existing
-	}
-	cmd = &Command{Name: name, Description: description}
-	return cmd, existing
-}
-
-// RegisterCommand adds the command to the CommandMap
-func RegisterCommand(cmd *Command) {
-	CommandMap[cmd.Name] = cmd
-	for _, alias := range cmd.Aliases {
-		AliasMap[alias] = cmd.Name
-	}
-}
-
-// UnregisterCommand removes the command from the CommandMap
-func UnregisterCommand(cmd *Command) {
-	delete(CommandMap, cmd.Name)
-	for _, alias := range cmd.Aliases {
-		delete(AliasMap, alias)
-	}
-}
-
-/*
-Cog structs and functions
-*/
-
-// Cog is a similar class to commands.Cog in discord.py
-type Cog struct {
-	Name        string
-	Description string
-	Dev         bool
-	Commands    []*Command
-	Loaded      bool
-}
-
-// NewCog creates a new cog instance
-func NewCog(name, description string, dev bool) *Cog {
-	return &Cog{Name: name, Description: description, Dev: dev, Loaded: false}
-}
-
-// AddCommand : Adds a command to the cog
-func (cog *Cog) AddCommand(name, description string, usage string, run interface{}) *Command {
-	cmd, existing := NewCommand(name, description)
-	if existing {
-		fmt.Println("error: command " + name + " already exists")
-	}
-	cmd.Run = reflect.ValueOf(run)
-	if cog.Dev == true {
-		cmd.Dev = true
-	}
-	cmd.SetUsage(usage)
-	cog.Commands = append(cog.Commands, cmd)
-
-	return cmd
-}
-
-// Load : Registers each command in the cog
-func (cog *Cog) Load() {
-	for _, cmd := range cog.Commands {
-		RegisterCommand(cmd)
-	}
-	CogMap[cog.Name] = cog
-	cog.Loaded = true
-}
-
-// Unload : Unregisters each command in the cog
-func (cog *Cog) Unload() {
-	for _, cmd := range cog.Commands {
-		UnregisterCommand(cmd)
-	}
-	delete(CogMap, cog.Name)
-	cog.Loaded = false
-}
-
 // HandleCommands gets called on messageCreate
-func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *Context, err error) {
+func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *commands.Context, err error) {
 	// so the bot doesn't respond to other bots or webhooks (including itself)
 	if msg.Author.Bot || msg.WebhookID != "" {
 		return nil, nil
@@ -240,7 +46,7 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 		}
 	}
 
-	ctx = &Context{
+	ctx = &commands.Context{
 		Session: session,
 		Message: msg,
 		Guild:   guild,
@@ -253,15 +59,15 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 	input := strings.Fields(msg.Content)
 	CmdString, args := strings.Trim(input[0], prefix), input[1:]
 
-	cmd, ok := CommandMap[CmdString]
+	cmd, ok := commands.CommandMap[CmdString]
 	if !ok {
-		cmdName, ok := AliasMap[CmdString]
+		cmdName, ok := commands.AliasMap[CmdString]
 		if !ok {
 			return nil, fmt.Errorf("InvokeCommandError: Invalid command name: %s", cmdName)
 		}
 
 		// Use the command name retrieved from the AliasMap to get the Command
-		cmd = CommandMap[cmdName]
+		cmd = commands.CommandMap[cmdName]
 	}
 
 	ctx.Command = cmd
@@ -347,8 +153,6 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 			t = cmdType.In(i).Elem().Kind()
 		}
 
-		fmt.Println(t)
-
 		switch t {
 		// String
 		case reflect.String:
@@ -386,7 +190,6 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 			}
 		// It is a pointer, get the type
 		case reflect.Ptr:
-			fmt.Println(cmdType.In(i).Elem().Name())
 			if cmdType.In(i).Elem().Name() == "User" {
 				// *discord.User
 				var user *discord.User
@@ -477,27 +280,4 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 		err = nil
 	}
 	return ctx, err
-}
-
-// HandleCommandError: Handles and recovers from errors without panicking
-func HandleCommandError(ctx *Context, err error) {
-	// No command found
-	if strings.HasPrefix(err.Error(), "InvokeCommandError") {
-		return
-	}
-
-	// Guild or channel could not be retrieved
-	if ctx == nil {
-		panic(err)
-	}
-
-	// Something is wrong with the user inputted arguments
-	if strings.HasPrefix(err.Error(), "ArgumentError") {
-		ctx.SendError(err, true)
-		return
-	}
-
-	// Log any other errors without panicking
-	fmt.Println(err)
-	debug.PrintStack()
 }

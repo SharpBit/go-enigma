@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/SharpBit/go-enigma/commands"
 	"github.com/SharpBit/go-enigma/utils"
 )
 
@@ -16,7 +17,7 @@ type Hastebin struct {
 	Key string `json:"string"`
 }
 
-func tinyurl(ctx *Context, link string) (err error) {
+func tinyurl(ctx *commands.Context, link string) (err error) {
 	url := "http://tinyurl.com/api-create.php?url=" + link
 
 	resp, err := http.Get(url)
@@ -31,7 +32,7 @@ func tinyurl(ctx *Context, link string) (err error) {
 	return
 }
 
-func hastebin(ctx *Context, code ...string) (err error) {
+func hastebin(ctx *commands.Context, code ...string) (err error) {
 	pushData := utils.CleanupCode(strings.Join(code, " "))
 	fmt.Println(pushData)
 
@@ -58,7 +59,7 @@ func hastebin(ctx *Context, code ...string) (err error) {
 }
 
 func init() {
-	cog := NewCog("Utility", "Useful commands to help you out", false)
+	cog := commands.NewCog("Utility", "Useful commands to help you out", false)
 	cog.AddCommand("tinyurl", "Shorten a URL with the tinyurl API", "<link>", tinyurl)
 	// cog.AddCommand("hastebin", "Hastebin-ify your code!", "<code>", hastebin)
 	cog.Load()

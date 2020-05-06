@@ -7,12 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SharpBit/go-enigma/commands"
 	"github.com/SharpBit/go-enigma/utils"
 
 	discord "github.com/bwmarrin/discordgo"
 )
 
-func serverinfo(ctx *Context) (err error) {
+func serverinfo(ctx *commands.Context) (err error) {
 	guild := ctx.Guild
 	channel := ctx.Channel
 
@@ -101,7 +102,7 @@ func serverinfo(ctx *Context) (err error) {
 	return
 }
 
-func userinfo(ctx *Context, member *discord.Member) (err error) {
+func userinfo(ctx *commands.Context, member *discord.Member) (err error) {
 	guild := ctx.Guild
 	channel := ctx.Channel
 
@@ -163,8 +164,8 @@ func userinfo(ctx *Context, member *discord.Member) (err error) {
 	em := utils.NewEmbed().
 		SetDescription(desc).
 		SetColor(0x2ecc71).
-		SetThumbnail(user.AvatarURL("")).
-		SetAuthor(user.String(), user.AvatarURL("")).
+		SetThumbnail(user.AvatarURL("256")).
+		SetAuthor(user.String(), user.AvatarURL("64")).
 		SetFooter("ID: "+user.ID).
 		AddField("Name", user.Username, true).
 		AddField("Member No.", strconv.Itoa(MemberCount), true).
@@ -177,35 +178,34 @@ func userinfo(ctx *Context, member *discord.Member) (err error) {
 	return
 }
 
-func avatar(ctx *Context, user *discord.User) (err error) {
+func avatar(ctx *commands.Context, user *discord.User) (err error) {
 	if user == nil {
 		user = ctx.Message.Author
 	}
 
 	em := utils.NewEmbed().
 		SetColor(0x2ecc71).
-		SetAuthor(user.String(), user.AvatarURL("")).
+		SetAuthor(user.String(), user.AvatarURL("64")).
 		SetFooter("ID: " + user.ID).
-		SetImage(user.AvatarURL("")).
+		SetImage(user.AvatarURL("2048")).
 		MessageEmbed
 
 	_, err = ctx.SendComplex("", em)
 	return
 }
 
-func servericon(ctx *Context) (err error) {
+func servericon(ctx *commands.Context) (err error) {
 	if ctx.Channel.Type == discord.ChannelTypeDM || ctx.Channel.Type == discord.ChannelTypeGroupDM {
 		return fmt.Errorf("CommandCheckError: Command cannot be run in a DM.")
 	}
 
 	guild := ctx.Guild
-	GuildIconURL := "https://cdn.discordapp.com/icons/" + guild.ID + "/" + guild.Icon
 
 	em := utils.NewEmbed().
 		SetColor(0x2ecc71).
-		SetAuthor(guild.Name, GuildIconURL).
+		SetAuthor(guild.Name, guild.IconURL()+"?size=64").
 		SetFooter("ID: " + guild.ID).
-		SetImage(GuildIconURL).
+		SetImage(guild.IconURL() + "?size=2048").
 		MessageEmbed
 
 	_, err = ctx.SendComplex("", em)
@@ -213,7 +213,7 @@ func servericon(ctx *Context) (err error) {
 }
 
 func init() {
-	cog := NewCog("Info", "Information about certain things", false)
+	cog := commands.NewCog("Info", "Information about certain things", false)
 	cog.AddCommand("serverinfo", "Retrieves info about the server", "", serverinfo).
 		SetAliases("server", "si")
 	cog.AddCommand("userinfo", "Gets info about a user", "[member]", userinfo).
