@@ -32,6 +32,12 @@ func HandleCommandError(ctx *commands.Context, err error) {
 		return
 	}
 
+	// Insufficient permissions
+	if strings.HasPrefix(err.Error(), "HTTP 403 Forbidden") {
+		ctx.Send("I do not have the permissions to perform this command.")
+		return
+	}
+
 	// Log any other errors without panicking
 	fmt.Println(err)
 	debug.PrintStack()

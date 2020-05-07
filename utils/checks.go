@@ -7,11 +7,41 @@ import (
 	discord "github.com/bwmarrin/discordgo"
 )
 
-// OwnerOnly: Check to see if
+func PermCheck(RequiredPerm int) commands.CheckFunction {
+	return func(ctx *commands.Context) (bool, error) {
+		state := ctx.Session.State
+		perms, err := state.UserChannelPermissions(ctx.Author.ID, ctx.Channel.ID)
+		if err != nil {
+			return false, err
+		}
+
+		if perms&RequiredPerm == RequiredPerm {
+			return true, nil
+		}
+		return false, fmt.Errorf("CommandCheckError: PermissionError: You do not have the permissions to perform this command.")
+	}
+}
+
+func BotPermCheck(RequiredPerm int) commands.CheckFunction {
+	return func(ctx *commands.Context) (bool, error) {
+		state := ctx.Session.State
+		perms, err := state.UserChannelPermissions(ctx.Session.State.User.ID, ctx.Channel.ID)
+		if err != nil {
+			return false, err
+		}
+
+		if perms&RequiredPerm == RequiredPerm {
+			return true, nil
+		}
+		return false, fmt.Errorf("CommandCheckError: BotPermissionError: I do not have the permissions to perform this command.")
+	}
+}
+
+// OwnerOnly: Check to see if the author is the bot owner
 func OwnerOnly(ctx *commands.Context) (bool, error) {
 	OwnerID := GetConfig("ownerID")
 	if ctx.Author.ID != OwnerID {
-		return false, fmt.Errorf("CommandCheckError: You are not the owner of this bot")
+		return false, fmt.Errorf("CommandCheckError: You are not the owner of this bot!")
 	}
 	return true, nil
 }

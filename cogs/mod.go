@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/SharpBit/go-enigma/commands"
+	"github.com/SharpBit/go-enigma/utils"
 	discord "github.com/bwmarrin/discordgo"
 )
 
@@ -43,11 +44,17 @@ func kick(ctx *commands.Context, member *discord.Member, reason ...string) (err 
 func init() {
 	cog := commands.NewCog("Mod", "Guild Moderation commands")
 	cog.AddCommand("ban", "Ban a member from the guild", "<member> [reason]", ban).
-		SetDefaultArg("None")
+		SetDefaultArg("None").
+		AddCheck(utils.PermCheck(discord.PermissionBanMembers)).
+		AddCheck(utils.BotPermCheck(discord.PermissionBanMembers))
 	cog.AddCommand("unban", "Unban a user from the guild", "<NameOrID> [reason]", unban).
-		SetDefaultArg("None")
+		SetDefaultArg("None").
+		AddCheck(utils.PermCheck(discord.PermissionBanMembers)).
+		AddCheck(utils.BotPermCheck(discord.PermissionBanMembers))
 	cog.AddCommand("kick", "Kick a member from the guild", "<member> [reason]", kick).
-		SetDefaultArg("None")
+		SetDefaultArg("None").
+		AddCheck(utils.PermCheck(discord.PermissionKickMembers)).
+		AddCheck(utils.BotPermCheck(discord.PermissionKickMembers))
 	cog.Load()
 
 }

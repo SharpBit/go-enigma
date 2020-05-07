@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	discord "github.com/bwmarrin/discordgo"
 )
@@ -30,6 +31,11 @@ func (ctx *Context) SendComplex(content string, embed *discord.MessageEmbed) (*d
 
 // SendError replies with the error and help if sendHelp is true
 func (ctx *Context) SendError(err error, sendHelp bool) (*discord.Message, error) {
+	xmark, err2 := ctx.GetEmoji("xmark")
+	if err2 != nil {
+		return nil, err2
+	}
+
 	if sendHelp {
 		usageString := "`" + ctx.Prefix + ctx.Command.Name
 		if ctx.Command.Usage != "" {
@@ -41,9 +47,9 @@ func (ctx *Context) SendError(err error, sendHelp bool) (*discord.Message, error
 			SetTitle(usageString).
 			SetDescription(ctx.Command.Description).
 			MessageEmbed
-		return ctx.SendComplex(err.Error(), em)
+		return ctx.SendComplex(xmark.MessageFormat()+" "+err.Error(), em)
 	}
-	return ctx.Send(err.Error())
+	return ctx.Send(xmark.MessageFormat() + " " + err.Error())
 }
 
 // CodeBlock returns code formatted into a codeblock to send to Discord
@@ -69,4 +75,24 @@ func (ctx *Context) GetBan(input string) (userID string, err error) {
 		}
 	}
 	return "", fmt.Errorf("NotFoundError: no ban found")
+}
+
+func (ctx *Context) GetEmoji(name string) (emoji *discord.Emoji, err error) {
+	GuildID := "571500500357480448"
+	guild, err := ctx.Session.State.Guild(GuildID)
+	if err != nil {
+		guild, err = ctx.Session.Guild(GuildID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, e := range guild.Emojis {
+		CleanedName := strings.Split(e.Name, " ")[0]
+		if CleanedName == name {
+			return e, nil
+		}
+	}
+
+	return nil, fmt.Errorf("error ctx.GetEmoji: Emoji not found.")
 }

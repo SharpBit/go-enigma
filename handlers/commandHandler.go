@@ -116,12 +116,12 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 		if cmd.HasOptionalArg {
 			// Less than the minimum number of parameters
 			if trueLength < cmdType.NumIn()-1 {
-				return ctx, fmt.Errorf("ArgumentError: Incorrect number of arguments")
+				return ctx, fmt.Errorf("ArgumentError: Incorrect number of arguments provided.")
 			}
 		} else {
 			// Not equal number of args
 			if trueLength < cmdType.NumIn() {
-				return ctx, fmt.Errorf("ArgumentError: Incorrect number of arguments")
+				return ctx, fmt.Errorf("ArgumentError: Incorrect number of arguments provided.")
 			}
 		}
 	} else {
@@ -130,12 +130,12 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 		if cmd.HasOptionalArg {
 			// Not equal to or one less
 			if !(trueLength == cmdType.NumIn() || trueLength == cmdType.NumIn()-1) {
-				return ctx, fmt.Errorf("ArgumentError: Incorrect number of arguments")
+				return ctx, fmt.Errorf("ArgumentError: Incorrect number of arguments provided.")
 			}
 		} else {
 			// Not equal number of args
 			if trueLength != cmdType.NumIn() {
-				return ctx, fmt.Errorf("ArgumentError: Incorrect number of arguments")
+				return ctx, fmt.Errorf("ArgumentError: Incorrect number of arguments provided.")
 			}
 		}
 	}
@@ -191,7 +191,7 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 			case "false", "f", "no", "n", "0":
 				ConvertedArgs = append(ConvertedArgs, reflect.ValueOf(false))
 			default:
-				return ctx, fmt.Errorf("ArgumentError: Invalid boolean.")
+				return ctx, fmt.Errorf("ArgumentError: Invalid boolean value.")
 			}
 		// It is a pointer, get the type
 		case reflect.Ptr:
@@ -257,11 +257,11 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 				return ctx, fmt.Errorf("ArgumentError: Member was not found.")
 			} else {
 				// Not an implemented pointer type
-				return ctx, fmt.Errorf("Invalid pointer type")
+				return ctx, fmt.Errorf("ArgumentError: Invalid pointer type.")
 			}
 		default:
 			// Not an implemented type
-			return ctx, fmt.Errorf("ArgmentError: Invalid type")
+			return ctx, fmt.Errorf("ArgmentError: Invalid type.")
 		}
 		i--
 	}
