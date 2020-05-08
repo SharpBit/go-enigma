@@ -45,16 +45,16 @@ func init() {
 	cog := commands.NewCog("Mod", "Guild Moderation commands")
 	cog.AddCommand("ban", "Ban a member from the guild", "<member> [reason]", ban).
 		SetDefaultArg("None").
-		AddCheck(utils.PermCheck(discord.PermissionBanMembers)).
-		AddCheck(utils.BotPermCheck(discord.PermissionBanMembers))
+		AddCheck(utils.PermCheck("Ban Members", discord.PermissionBanMembers)).
+		AddCheck(utils.BotPermCheck("Ban Members", discord.PermissionBanMembers))
 	cog.AddCommand("unban", "Unban a user from the guild", "<NameOrID> [reason]", unban).
 		SetDefaultArg("None").
-		AddCheck(utils.PermCheck(discord.PermissionBanMembers)).
-		AddCheck(utils.BotPermCheck(discord.PermissionBanMembers))
+		AddCheck(utils.PermCheck("Ban Members", discord.PermissionBanMembers)).
+		AddCheck(utils.BotPermCheck("Ban Members", discord.PermissionBanMembers))
 	cog.AddCommand("kick", "Kick a member from the guild", "<member> [reason]", kick).
 		SetDefaultArg("None").
-		AddCheck(utils.PermCheck(discord.PermissionKickMembers)).
-		AddCheck(utils.BotPermCheck(discord.PermissionKickMembers))
+		AddCheck(utils.PermCheck("Kick Members", discord.PermissionKickMembers)).
+		AddCheck(utils.BotPermCheck("Kick Members", discord.PermissionKickMembers))
 	cog.Load()
 
 }

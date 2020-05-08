@@ -27,7 +27,9 @@ func HandleCommandError(ctx *commands.Context, err error) {
 	}
 
 	// Command check failed
-	if strings.HasPrefix(err.Error(), "CommandCheckError") {
+	if strings.HasPrefix(err.Error(), "CommandCheckError") ||
+		strings.HasPrefix(err.Error(), "NotFoundError") ||
+		strings.HasPrefix(err.Error(), "BotPermissionError") {
 		ctx.SendError(err, false)
 		return
 	}

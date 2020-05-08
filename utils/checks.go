@@ -7,7 +7,7 @@ import (
 	discord "github.com/bwmarrin/discordgo"
 )
 
-func PermCheck(RequiredPerm int) commands.CheckFunction {
+func PermCheck(name string, RequiredPerm int) commands.CheckFunction {
 	return func(ctx *commands.Context) (bool, error) {
 		state := ctx.Session.State
 		perms, err := state.UserChannelPermissions(ctx.Author.ID, ctx.Channel.ID)
@@ -18,11 +18,11 @@ func PermCheck(RequiredPerm int) commands.CheckFunction {
 		if perms&RequiredPerm == RequiredPerm {
 			return true, nil
 		}
-		return false, fmt.Errorf("CommandCheckError: PermissionError: You do not have the permissions to perform this command.")
+		return false, fmt.Errorf("CommandCheckError: PermissionError: You need the **" + name + "** permission to perform this command.")
 	}
 }
 
-func BotPermCheck(RequiredPerm int) commands.CheckFunction {
+func BotPermCheck(name string, RequiredPerm int) commands.CheckFunction {
 	return func(ctx *commands.Context) (bool, error) {
 		state := ctx.Session.State
 		perms, err := state.UserChannelPermissions(ctx.Session.State.User.ID, ctx.Channel.ID)
@@ -33,7 +33,7 @@ func BotPermCheck(RequiredPerm int) commands.CheckFunction {
 		if perms&RequiredPerm == RequiredPerm {
 			return true, nil
 		}
-		return false, fmt.Errorf("CommandCheckError: BotPermissionError: I do not have the permissions to perform this command.")
+		return false, fmt.Errorf("CommandCheckError: BotPermissionError: I need the **" + name + "** permission to perform this command.")
 	}
 }
 
