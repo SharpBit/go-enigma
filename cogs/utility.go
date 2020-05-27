@@ -15,7 +15,7 @@ import (
 )
 
 type Hastebin struct {
-	Key string `json:"string"`
+	Key string `json:"key"`
 }
 
 type GeniusAPI struct {
@@ -122,13 +122,9 @@ func lyrics(ctx *commands.Context, query ...string) (err error) {
 }
 
 func hastebin(ctx *commands.Context, code ...string) (err error) {
-	pushData := utils.CleanupCode(strings.Join(code, " "))
-	fmt.Println(pushData)
+	cleanData := utils.CleanupCode(strings.Join(code, " "))
 
-	jsonData := map[string]string{"data": pushData}
-	jsonValue, _ := json.Marshal(jsonData)
-
-	resp, err := http.Post("https://hastebin.com/documents", "application/json", bytes.NewBuffer(jsonValue))
+	resp, err := http.Post("https://hastebin.com/documents", "application/json", bytes.NewBuffer([]byte(cleanData)))
 	if err != nil {
 		return fmt.Errorf("error making POST request")
 	}
@@ -142,7 +138,7 @@ func hastebin(ctx *commands.Context, code ...string) (err error) {
 		return fmt.Errorf("error unparsing returned JSON")
 	}
 
-	_, err = ctx.Send("Hastebin-ified! Here is your code: https://hastebin.com/" + data.Key + ".go")
+	_, err = ctx.Send("Hastebin-ified! Here is your code: https://hastebin.com/" + data.Key)
 	return
 
 }
@@ -150,7 +146,7 @@ func hastebin(ctx *commands.Context, code ...string) (err error) {
 func init() {
 	cog := commands.NewCog("Utility", "Useful commands to help you out")
 	cog.AddCommand("tinyurl", "Shorten a URL with the tinyurl API", "<link>", tinyurl)
-	// cog.AddCommand("hastebin", "Hastebin-ify your code!", "<code>", hastebin)
+	cog.AddCommand("hastebin", "Hastebin-ify your code!", "<code>", hastebin)
 	cog.AddCommand("lyrics", "Find the lyrics for a song", "<query>", lyrics)
 	cog.Load()
 }

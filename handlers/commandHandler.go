@@ -59,7 +59,7 @@ func HandleCommands(session *discordgo.Session, msg *discordgo.MessageCreate) (c
 	ctx.Guild = guild
 
 	// Separates the commands from the arguments
-	input := strings.Fields(msg.Content)
+	input := strings.Split(msg.Content, " ")
 	CmdString, args := strings.Trim(input[0], prefix), input[1:]
 
 	cmd, ok := commands.CommandMap[CmdString]
