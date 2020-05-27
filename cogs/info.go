@@ -9,22 +9,16 @@ import (
 
 	"github.com/SharpBit/go-enigma/commands"
 	"github.com/SharpBit/go-enigma/utils"
-
-	discord "github.com/bwmarrin/discordgo"
+	"github.com/bwmarrin/discordgo"
 )
 
 func serverinfo(ctx *commands.Context) (err error) {
 	guild := ctx.Guild
-	channel := ctx.Channel
-
-	if channel.Type == discord.ChannelTypeDM || channel.Type == discord.ChannelTypeGroupDM {
-		return fmt.Errorf("CommandCheckError: Command cannot be run in a DM.")
-	}
 
 	// Get the number of online members
 	onlineMembers := 0
 	for _, m := range guild.Presences {
-		if m.Status != discord.StatusOffline {
+		if m.Status != discordgo.StatusOffline {
 			onlineMembers++
 		}
 	}
@@ -43,13 +37,13 @@ func serverinfo(ctx *commands.Context) (err error) {
 	// Convert constants into human readable verification levels
 	var VerificationFmt string
 	switch guild.VerificationLevel {
-	case discord.VerificationLevelNone:
+	case discordgo.VerificationLevelNone:
 		VerificationFmt = "None"
-	case discord.VerificationLevelLow:
+	case discordgo.VerificationLevelLow:
 		VerificationFmt = "Low"
-	case discord.VerificationLevelMedium:
+	case discordgo.VerificationLevelMedium:
 		VerificationFmt = "Medium"
-	case discord.VerificationLevelHigh:
+	case discordgo.VerificationLevelHigh:
 		VerificationFmt = "High"
 	default:
 		VerificationFmt = "Very High"
@@ -68,9 +62,9 @@ func serverinfo(ctx *commands.Context) (err error) {
 	VoiceChannels := 0
 
 	for _, c := range guild.Channels {
-		if c.Type == discord.ChannelTypeGuildText {
+		if c.Type == discordgo.ChannelTypeGuildText {
 			TextChannels++
-		} else if c.Type == discord.ChannelTypeGuildVoice {
+		} else if c.Type == discordgo.ChannelTypeGuildVoice {
 			VoiceChannels++
 		}
 	}
@@ -102,15 +96,10 @@ func serverinfo(ctx *commands.Context) (err error) {
 	return
 }
 
-func userinfo(ctx *commands.Context, member *discord.Member) (err error) {
+func userinfo(ctx *commands.Context, member *discordgo.Member) (err error) {
 	guild := ctx.Guild
-	channel := ctx.Channel
 
-	if channel.Type == discord.ChannelTypeDM || channel.Type == discord.ChannelTypeGroupDM {
-		return fmt.Errorf("CommandCheckError: Command cannot be run in a DM.")
-	}
-
-	var user *discord.User
+	var user *discordgo.User
 	if member == nil {
 		member = ctx.Message.Member
 		user = ctx.Author
@@ -178,7 +167,7 @@ func userinfo(ctx *commands.Context, member *discord.Member) (err error) {
 	return
 }
 
-func avatar(ctx *commands.Context, user *discord.User) (err error) {
+func avatar(ctx *commands.Context, user *discordgo.User) (err error) {
 	if user == nil {
 		user = ctx.Message.Author
 	}
@@ -195,7 +184,7 @@ func avatar(ctx *commands.Context, user *discord.User) (err error) {
 }
 
 func servericon(ctx *commands.Context) (err error) {
-	if ctx.Channel.Type == discord.ChannelTypeDM || ctx.Channel.Type == discord.ChannelTypeGroupDM {
+	if ctx.Channel.Type == discordgo.ChannelTypeDM || ctx.Channel.Type == discordgo.ChannelTypeGroupDM {
 		return fmt.Errorf("CommandCheckError: Command cannot be run in a DM.")
 	}
 

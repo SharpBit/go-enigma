@@ -5,10 +5,10 @@ import (
 
 	"github.com/SharpBit/go-enigma/commands"
 	"github.com/SharpBit/go-enigma/utils"
-	discord "github.com/bwmarrin/discordgo"
+	"github.com/bwmarrin/discordgo"
 )
 
-func ban(ctx *commands.Context, member *discord.Member, reason ...string) (err error) {
+func ban(ctx *commands.Context, member *discordgo.Member, reason ...string) (err error) {
 	ReasonFmt := ctx.Author.Username + "#" + ctx.Author.Discriminator + " (" + strings.Join(reason, " ") + ")"
 	ctx.Session.GuildBanCreateWithReason(ctx.Guild.ID, member.User.ID, ReasonFmt, 1)
 	_, err = ctx.Send("Done.")
@@ -31,7 +31,7 @@ func unban(ctx *commands.Context, NameOrID string, reason ...string) (err error)
 	return
 }
 
-func kick(ctx *commands.Context, member *discord.Member, reason ...string) (err error) {
+func kick(ctx *commands.Context, member *discordgo.Member, reason ...string) (err error) {
 	ReasonFmt := ctx.Author.Username + "#" + ctx.Author.Discriminator + " (" + strings.Join(reason, " ") + ")"
 	err = ctx.Session.GuildMemberDeleteWithReason(ctx.Guild.ID, member.User.ID, ReasonFmt)
 	if err != nil {
@@ -45,16 +45,16 @@ func init() {
 	cog := commands.NewCog("Mod", "Guild Moderation commands")
 	cog.AddCommand("ban", "Ban a member from the guild", "<member> [reason]", ban).
 		SetDefaultArg("None").
-		AddCheck(utils.PermCheck("Ban Members", discord.PermissionBanMembers)).
-		AddCheck(utils.BotPermCheck("Ban Members", discord.PermissionBanMembers))
+		AddCheck(utils.PermCheck("Ban Members", discordgo.PermissionBanMembers)).
+		AddCheck(utils.BotPermCheck("Ban Members", discordgo.PermissionBanMembers))
 	cog.AddCommand("unban", "Unban a user from the guild", "<NameOrID> [reason]", unban).
 		SetDefaultArg("None").
-		AddCheck(utils.PermCheck("Ban Members", discord.PermissionBanMembers)).
-		AddCheck(utils.BotPermCheck("Ban Members", discord.PermissionBanMembers))
+		AddCheck(utils.PermCheck("Ban Members", discordgo.PermissionBanMembers)).
+		AddCheck(utils.BotPermCheck("Ban Members", discordgo.PermissionBanMembers))
 	cog.AddCommand("kick", "Kick a member from the guild", "<member> [reason]", kick).
 		SetDefaultArg("None").
-		AddCheck(utils.PermCheck("Kick Members", discord.PermissionKickMembers)).
-		AddCheck(utils.BotPermCheck("Kick Members", discord.PermissionKickMembers))
+		AddCheck(utils.PermCheck("Kick Members", discordgo.PermissionKickMembers)).
+		AddCheck(utils.BotPermCheck("Kick Members", discordgo.PermissionKickMembers))
 	cog.Load()
 
 }

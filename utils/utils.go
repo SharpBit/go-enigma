@@ -6,12 +6,7 @@ import (
 	"strings"
 	"time"
 
-	discord "github.com/bwmarrin/discordgo"
-)
-
-var (
-	DefaultUser   = &discord.User{ID: "DEFAULT"}
-	DefaultMember = &discord.Member{User: DefaultUser}
+	"github.com/bwmarrin/discordgo"
 )
 
 // CreationTime returns the creation time of a Snowflake ID relative to the creation of Discord.
@@ -26,8 +21,8 @@ func CreationTime(ID string) (t time.Time, err error) {
 }
 
 // GetRoles finds the roles based on given roles and IDs
-func GetRoles(guild *discord.Guild, member *discord.Member) []*discord.Role {
-	roles := []*discord.Role{}
+func GetRoles(guild *discordgo.Guild, member *discordgo.Member) []*discordgo.Role {
+	roles := []*discordgo.Role{}
 	for _, m := range member.Roles {
 		for _, r := range guild.Roles {
 			if r.ID == m {

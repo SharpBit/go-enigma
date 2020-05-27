@@ -8,7 +8,7 @@ import (
 
 	"github.com/SharpBit/go-enigma/commands"
 	"github.com/SharpBit/go-enigma/utils"
-	discord "github.com/bwmarrin/discordgo"
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 )
 
 // HandleCommands gets called on messageCreate
-func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *commands.Context, err error) {
+func HandleCommands(session *discordgo.Session, msg *discordgo.MessageCreate) (ctx *commands.Context, err error) {
 	// so the bot doesn't respond to other bots or webhooks (including itself)
 	if msg.Author.Bot || msg.WebhookID != "" {
 		return nil, nil
@@ -50,7 +50,7 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 	if err != nil {
 		guild, err = session.Guild(msg.GuildID)
 		if err != nil {
-			if !(channel.Type == discord.ChannelTypeDM || channel.Type == discord.ChannelTypeGroupDM) {
+			if !(channel.Type == discordgo.ChannelTypeDM || channel.Type == discordgo.ChannelTypeGroupDM) {
 				return nil, err
 			}
 		}
@@ -197,7 +197,7 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 		case reflect.Ptr:
 			if cmdType.In(i).Elem().Name() == "User" {
 				// *discord.User
-				var user *discord.User
+				var user *discordgo.User
 
 				// Look for mentions
 				if len(msg.Mentions) > 0 {
@@ -230,7 +230,7 @@ func HandleCommands(session *discord.Session, msg *discord.MessageCreate) (ctx *
 				return ctx, fmt.Errorf("ArgumentError: User was not found.")
 			} else if cmdType.In(i).Elem().Name() == "Member" {
 				// *discord.Member
-				var member *discord.Member
+				var member *discordgo.Member
 
 				// Look for mentions
 				if len(msg.Mentions) > 0 {

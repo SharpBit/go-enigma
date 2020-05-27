@@ -9,12 +9,11 @@ import (
 	_ "github.com/SharpBit/go-enigma/cogs" // to create/load the commands
 	"github.com/SharpBit/go-enigma/events"
 	"github.com/SharpBit/go-enigma/utils"
-
-	discord "github.com/bwmarrin/discordgo"
+	"github.com/bwmarrin/discordgo"
 )
 
 func main() {
-	bot, err := discord.New("Bot " + utils.GetConfig("token"))
+	bot, err := discordgo.New("Bot " + utils.GetConfig("token"))
 
 	if err != nil {
 		fmt.Println("error logging in,", err)

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/SharpBit/go-enigma/commands"
-	discord "github.com/bwmarrin/discordgo"
+	"github.com/bwmarrin/discordgo"
 )
 
 func PermCheck(name string, RequiredPerm int) commands.CheckFunction {
@@ -47,7 +47,7 @@ func OwnerOnly(ctx *commands.Context) (bool, error) {
 }
 
 func GuildOnly(ctx *commands.Context) (bool, error) {
-	if ctx.Channel.Type == discord.ChannelTypeDM || ctx.Channel.Type == discord.ChannelTypeGroupDM {
+	if ctx.Channel.Type == discordgo.ChannelTypeDM || ctx.Channel.Type == discordgo.ChannelTypeGroupDM {
 		return false, fmt.Errorf("CommandCheckError: Command must be run in a guild.")
 	}
 	return true, nil
