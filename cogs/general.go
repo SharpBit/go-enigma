@@ -47,7 +47,7 @@ func help(ctx *commands.Context, command ...string) (err error) {
 					MaxSig = len(c.Name)
 				}
 			}
-			MaxSig += 2
+			MaxSig += 1
 			for _, command := range cog.Commands {
 				NotAuthorized := false
 				for _, c := range command.Checks {
@@ -86,7 +86,7 @@ func help(ctx *commands.Context, command ...string) (err error) {
 				MaxSig = len(c.Name)
 			}
 		}
-		MaxSig += 2
+		MaxSig += 1
 		for _, command := range cog.Commands {
 			NotAuthorized := false
 			for _, c := range command.Checks {
