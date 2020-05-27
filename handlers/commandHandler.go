@@ -146,12 +146,12 @@ func HandleCommands(session *discordgo.Session, msg *discordgo.MessageCreate) (c
 		// Skip the context argument, decremented later
 		i++
 
-		t := cmdType.In(i).Kind()
-
 		if i >= cmdType.NumIn() {
 			// Use the last argument's value since it is a slice
 			i = cmdType.NumIn() - 1
 		}
+
+		t := cmdType.In(i).Kind()
 
 		// If it is a slice, use the type of the slice
 		if t == reflect.Slice {
