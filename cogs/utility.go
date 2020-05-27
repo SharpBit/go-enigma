@@ -14,22 +14,6 @@ import (
 	"github.com/SharpBit/go-enigma/utils"
 )
 
-type Hastebin struct {
-	Key string `json:"key"`
-}
-
-type GeniusAPI struct {
-	Response struct {
-		Hits []struct {
-			Result struct {
-				Title   string `json:"full_title"`
-				URL     string `json:"url"`
-				SongArt string `json:"song_art_image_thumbnail_url"`
-			} `json:"result"`
-		} `json:"hits"`
-	} `json:"response"`
-}
-
 func tinyurl(ctx *commands.Context, link string) (err error) {
 	url := "http://tinyurl.com/api-create.php?url=" + link
 
@@ -66,8 +50,19 @@ func lyrics(ctx *commands.Context, query ...string) (err error) {
 		return
 	}
 
-	data := &GeniusAPI{}
-	err = json.Unmarshal(body, data)
+	var data struct {
+		Response struct {
+			Hits []struct {
+				Result struct {
+					Title   string `json:"full_title"`
+					URL     string `json:"url"`
+					SongArt string `json:"song_art_image_thumbnail_url"`
+				} `json:"result"`
+			} `json:"hits"`
+		} `json:"response"`
+	}
+
+	err = json.Unmarshal(body, &data)
 	if err != nil {
 		return
 	}
@@ -132,8 +127,10 @@ func hastebin(ctx *commands.Context, code ...string) (err error) {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	data := &Hastebin{}
-	err = json.Unmarshal(body, data)
+	var data struct {
+		Key string `json:"key"`
+	}
+	err = json.Unmarshal(body, &data)
 	if err != nil {
 		return fmt.Errorf("error unparsing returned JSON")
 	}
@@ -143,10 +140,65 @@ func hastebin(ctx *commands.Context, code ...string) (err error) {
 
 }
 
+func wikipedia(ctx *commands.Context, article ...string) (err error) {
+	resp, err := http.Get("https://en.wikipedia.org/api/rest_v1/page/summary/" + url.PathEscape(strings.Join(article, "_")))
+	if err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		ctx.Send("Wikipedia article was not found.")
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	var data struct {
+		Title       string `json:"title"`
+		Extract     string `json:"extract"`
+		ContentURLs struct {
+			Desktop struct {
+				Page string `json:"page"`
+			} `json:"desktop"`
+		} `json:"content_urls"`
+		Thumbnail struct {
+			Source string `json:"source"`
+		} `json:"thumbnail"`
+	}
+
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return
+	}
+
+	if data.ContentURLs.Desktop.Page == "" {
+		ctx.Send("Wikipedia article was not found.")
+		return
+	}
+
+	em := commands.NewEmbed().
+		SetTitle(data.Title).
+		SetURL(data.ContentURLs.Desktop.Page).
+		SetColor(0x2ecc71).
+		SetDescription(data.Extract).
+		SetThumbnail(data.Thumbnail.Source).
+		MessageEmbed
+
+	_, err = ctx.SendComplex("", em)
+	return
+}
+
 func init() {
 	cog := commands.NewCog("Utility", "Useful commands to help you out")
 	cog.AddCommand("tinyurl", "Shorten a URL with the tinyurl API", "<link>", tinyurl)
 	cog.AddCommand("hastebin", "Hastebin-ify your code!", "<code>", hastebin)
 	cog.AddCommand("lyrics", "Find the lyrics for a song", "<query>", lyrics)
+	cog.AddCommand("wikipedia", "Find a wikipedia article", "<article>", wikipedia).
+		SetAliases("wiki")
 	cog.Load()
 }

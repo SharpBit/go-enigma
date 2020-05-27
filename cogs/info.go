@@ -211,10 +211,10 @@ func init() {
 		SetDefaultArg(nil).
 		AddCheck(utils.GuildOnly)
 	cog.AddCommand("avatar", "Get the avatar for a certain user", "[user]", avatar).
-		SetAliases("av").
+		SetAliases("av", "pfp").
 		SetDefaultArg(nil)
 	cog.AddCommand("servericon", "Get the server icon", "", servericon).
-		SetAliases("icon").
+		SetAliases("icon", "serverlogo").
 		AddCheck(utils.GuildOnly)
 	cog.Load()
 }
