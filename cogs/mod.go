@@ -15,7 +15,7 @@ func ban(ctx *commands.Context, member *discordgo.Member, reason ...string) (err
 	return
 }
 
-func unban(ctx *commands.Context, NameOrID string, reason ...string) (err error) {
+func unban(ctx *commands.Context, NameOrID string) (err error) {
 	user, err := ctx.GetBan(NameOrID)
 	if err != nil {
 		ctx.SendError(err, false)
