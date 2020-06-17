@@ -164,7 +164,7 @@ func HandleCommands(session *discordgo.Session, msg *discordgo.MessageCreate) (c
 			ConvertedArgs = append(ConvertedArgs, reflect.ValueOf(arg))
 		// Int
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			val, err := strconv.ParseInt(arg, 10, 64)
+			val, err := strconv.Atoi(arg)
 			if err != nil {
 				return ctx, err
 			}

@@ -22,6 +22,7 @@ func main() {
 
 	bot.AddHandler(events.Ready)
 	bot.AddHandler(events.MessageCreate)
+	bot.State.MaxMessageCount = 500 // To cache messages to purge
 
 	err = bot.Open()
 
