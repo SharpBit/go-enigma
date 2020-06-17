@@ -193,6 +193,28 @@ func wikipedia(ctx *commands.Context, article ...string) (err error) {
 	return
 }
 
+func wolfram(ctx *commands.Context, query ...string) (err error) {
+	q := url.Values{}
+	q.Set("appid", utils.GetConfig("wolframapi"))
+	q.Set("i", strings.Join(query, " "))
+	req, _ := http.NewRequest("GET", "http://api.wolframalpha.com/v1/result?"+q.Encode(), nil)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	answer := string(body)
+	_, err = ctx.Send(answer)
+	return
+}
+
 func init() {
 	cog := commands.NewCog("Utility", "Useful commands to help you out")
 	cog.AddCommand("tinyurl", "Shorten a URL with the tinyurl API", "<link>", tinyurl)
@@ -200,5 +222,6 @@ func init() {
 	cog.AddCommand("lyrics", "Find the lyrics for a song", "<query>", lyrics)
 	cog.AddCommand("wikipedia", "Find a wikipedia article", "<article>", wikipedia).
 		SetAliases("wiki")
+	cog.AddCommand("wolfram", "Search wolfram for an answer to anything", "<query>", wolfram)
 	cog.Load()
 }
